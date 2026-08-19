@@ -37,6 +37,10 @@ code{background:#1c2128;padding:1px 4px;border-radius:3px;font-size:0.9em;color:
 <body>
 <h1>🔥 Qoder Trial Injector</h1>
 <div class="info">PKCE Login → WASM Auth Signing → center.qoder.sh → Trial Grant</div>
+<script>
+// Show step1 immediately
+document.addEventListener('DOMContentLoaded',()=>{document.getElementById('step1').style.display='block';});
+</script>
 
 <div id="step1">
 <button id="start-btn" onclick="startLogin()">Start Device Login</button>
