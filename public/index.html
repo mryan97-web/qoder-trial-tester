@@ -3,18 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Qoder Trial Injector</title>
+<title>Qoder IDE Simulator</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:system-ui,sans-serif;background:#0d1117;color:#c9d1d9;padding:20px;max-width:700px;margin:0 auto}
 h1{font-size:1.5em;margin-bottom:10px;color:#58a6ff}
 .info{background:#161b22;padding:12px;border-radius:8px;margin-bottom:15px;border:1px solid #30363d;font-size:0.85em;color:#8b949e}
-#step1,#step2,#step3,#step4{display:none;margin-bottom:15px}
 button{background:#238636;color:#fff;border:none;padding:10px 24px;border-radius:6px;font-size:1em;cursor:pointer}
 button:disabled{background:#21262d;color:#6e7681;cursor:wait}
 .login-link-box{display:none;margin-top:10px;padding:10px;background:#1c2128;border-radius:6px;border:1px solid #30363d}
-a{color:#58a6ff;text-decoration:underline}
-.step-log{background:#161b22;padding:8px 12px;border-radius:4px;margin-top:8px;font-family:monospace;font-size:0.8em;max-height:300px;overflow-y:auto;border:1px solid #30363d}
+a{color:#58a6ff}
+.step-log{background:#161b22;padding:8px 12px;border-radius:4px;margin-top:8px;font-family:monospace;font-size:0.8em;max-height:400px;overflow-y:auto;border:1px solid #30363d}
 .step-ok{color:#3fb950}.step-fail{color:#f85149}.step-skip{color:#d29922}
 .status-box{padding:15px;border-radius:8px;margin-bottom:10px;display:none}
 .status-loading{background:#1c2128;border:1px solid #30363d;color:#8b949e}
@@ -27,33 +26,24 @@ a{color:#58a6ff;text-decoration:underline}
 table{width:100%;border-collapse:collapse}
 td{padding:6px 10px;border-bottom:1px solid #30363d;font-size:0.85em}
 td:first-child{color:#8b949e;width:35%}
-#raw-out{display:none;margin-top:10px;padding:10px;background:#0d1117;border-radius:4px;font-family:monospace;font-size:0.75em;white-space:pre-wrap;word-break:break-all;color:#8b949e;max-height:200px;overflow-y:auto}
-details{margin-top:10px}
-summary{cursor:pointer;color:#58a6ff;font-size:0.85em}
-details table{margin-top:8px}
-code{background:#1c2128;padding:1px 4px;border-radius:3px;font-size:0.9em;color:#f0883e}
+#raw-out{display:none;margin-top:10px;padding:10px;background:#0d1117;border-radius:4px;font-family:monospace;font-size:0.75em;white-space:pre-wrap;word-break:break-all;color:#8b949e;max-height:300px;overflow-y:auto}
+.hidden{display:none!important}
 </style>
 </head>
 <body>
-<h1>🔥 Qoder Trial Injector</h1>
-<div class="info">PKCE Login → WASM Auth Signing → center.qoder.sh → Trial Grant</div>
-<script>
-// Show step1 immediately
-document.addEventListener('DOMContentLoaded',()=>{document.getElementById('step1').style.display='block';});
-</script>
+<h1>🔥 Qoder IDE Simulator</h1>
+<div class="info">Fake IDE → WASM-signed request → center.qoder.sh → Trial activated</div>
 
-<div id="step1">
-<button id="start-btn" onclick="startLogin()">Start Device Login</button>
-</div>
+<div id="step1"><button id="start-btn" onclick="startLogin()">Start Device Login</button></div>
 
-<div id="step2">
+<div id="step2" class="hidden">
 <div class="login-link-box" id="login-link-box">
-<p>Authorize at: <a id="login-link" href="#" target="_blank">qoder.com/device</a></p>
+<p>Authorize: <a id="login-link" href="#" target="_blank">qoder.com/device</a></p>
 <p style="font-size:0.8em;color:#8b949e">Auto-polling...</p>
 </div>
 </div>
 
-<div id="step3">
+<div id="step3" class="hidden">
 <div id="status-box" class="status-box"></div>
 <div class="step-log" id="step-log"></div>
 </div>
@@ -61,56 +51,38 @@ document.addEventListener('DOMContentLoaded',()=>{document.getElementById('step1
 <div id="main-card"></div>
 <div id="raw-out"></div>
 
-<details>
-<summary>Technical details</summary>
-<table>
-<tr><td>Auth flow</td><td>PKCE S256 Device Login (OAuth 2.0)</td></tr>
-<tr><td>Client ID</td><td><code>e883ade2</code> (IDE)</td></tr>
-<tr><td>WASM</td><td>qoder_auth_wasm loaded in browser</td></tr>
-<tr><td>Step 1</td><td>POST <code>/api/v1/deviceToken/poll</code> → get token</td></tr>
-<tr><td>Step 2</td><td>WASM generate_runtime_auth_fields → encrypt_user_info + key</td></tr>
-<tr><td>Step 3</td><td>GET <code>/api/v1/userinfo</code> → read user</td></tr>
-<tr><td>Step 4</td><td>POST <code>center.qoder.sh/api/v2/config/updateDataPolicy</code> → trigger trial (WASM-signed)</td></tr>
-<tr><td>Step 5</td><td>GET <code>/api/v2/user/plan</code> + <code>/api/v2/quota/usage</code> → verify</td></tr>
-</table>
-</details>
-
 <script>
-// ===== PKCE + Device Login =====
+// ===== Config =====
 let pkceState=null;
-const CLIENT_ID_IDE='e883ade2-e6e3-4d6d-adf7-f92ceff5fdcb';
-const OPENAPI_BASE='https://openapi.qoder.sh';
-const CENTER_BASE='https://center.qoder.sh';
-const WEB_BASE='https://qoder.com';
-const CLI_VERSION='0.2.11';
+const CLIENT_ID='e883ade2-e6e3-4d6d-adf7-f92ceff5fdcb';
+const OPENAPI='https://openapi.qoder.sh';
+const CENTER='https://center.qoder.sh';
+const WEB='https://qoder.com';
+const VERSION='0.2.11';
 const CLIENT_TYPE='6';
 const MACHINE_OS='arm64_darwin';
 
-// Generate fake machineToken (88-char base64url = 66 bytes, same format as UMID binary output)
-// Server can't decode VM info from it (xxhash64 = one-way hash)
-// vmInfo.isVm is CLIENT-SIDE telemetry only, NEVER sent to server
-function generateMachineToken(){
-const bytes=new Uint8Array(66);crypto.getRandomValues(bytes);
-let bin='';for(let i=0;i<66;i++)bin+=String.fromCharCode(bytes[i]);
-return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+function show(id){document.getElementById(id).classList.remove('hidden')}
+function hide(id){document.getElementById(id).classList.add('hidden')}
+function showStatus(m,c){const b=document.getElementById('status-box');b.className='status-box '+c;b.style.display='block';b.innerHTML=m;}
+function log(t,c){document.getElementById('step-log').innerHTML+='<div class="'+(c||'')+'">'+t+'</div>';}
+
+// Fake machineToken (88-char base64url = 66 bytes, same format as UMID)
+function genMachineToken(){
+const b=new Uint8Array(66);crypto.getRandomValues(b);
+let s='';for(let i=0;i<66;i++)s+=String.fromCharCode(b[i]);
+return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+function genMachineType(){
+return Array.from(crypto.getRandomValues(new Uint8Array(8))).map(b=>b.toString(16).padStart(2,'0')).join('');
 }
 
-// Generate fake machineType (hex string, same format as UMID)
-function generateMachineType(){
-return Array.from(crypto.getRandomValues(new Uint8Array(8)))
-.map(b=>b.toString(16).padStart(2,'0')).join('');
-}
-
-function show(id){document.getElementById(id).style.display='block'}
-function hide(id){document.getElementById(id).style.display='none'}
-function showStatus(msg,cls){const b=document.getElementById('status-box');b.className='status-box '+cls;b.style.display='block';b.innerHTML=msg;}
-function logStep(t,c){document.getElementById('step-log').innerHTML+='<div class="'+(c||'')+'">'+t+'</div>';}
-
-async function generatePKCE(){
+// ===== PKCE =====
+async function genPKCE(){
 const chars='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
-const length=43+Math.floor(86*Math.random());
-let v='';const r=new Uint8Array(length);crypto.getRandomValues(r);
-for(let i=0;i<length;i++)v+=chars[r[i]%chars.length];
+const len=43+Math.floor(86*Math.random());
+let v='';const r=new Uint8Array(len);crypto.getRandomValues(r);
+for(let i=0;i<len;i++)v+=chars[r[i]%chars.length];
 const d=new TextEncoder().encode(v);
 const h=await crypto.subtle.digest('SHA-256',d);
 return{verifier:v,challenge:btoa(String.fromCharCode(...new Uint8Array(h))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')};
@@ -118,316 +90,357 @@ return{verifier:v,challenge:btoa(String.fromCharCode(...new Uint8Array(h))).repl
 
 async function startLogin(){
 const btn=document.getElementById('start-btn');
-btn.disabled=true;btn.textContent='Generating login...';
+btn.disabled=true;btn.textContent='Generating...';
 try{
-const pkce=await generatePKCE();
+const pkce=await genPKCE();
 const nonce=crypto.randomUUID();
 const machineId=crypto.randomUUID();
-const machineToken=generateMachineToken();
-const machineType=generateMachineType();
-pkceState={verifier:pkce.verifier,challenge:pkce.challenge,nonce,machineId,machineToken,machineType};
-const loginUrl=`${WEB_BASE}/device/selectAccounts?challenge=${pkce.challenge}&challenge_method=S256&nonce=${nonce}&machine_id=${machineId}&client_id=${CLIENT_ID_IDE}`;
-window.open(loginUrl,'_blank');
-const link=document.getElementById('login-link');
-link.href=loginUrl;
+pkceState={verifier:pkce.verifier,challenge:pkce.challenge,nonce,machineId,
+machineToken:genMachineToken(),machineType:genMachineType()};
+const url=`${WEB}/device/selectAccounts?challenge=${pkce.challenge}&challenge_method=S256&nonce=${nonce}&machine_id=${machineId}&client_id=${CLIENT_ID}`;
+window.open(url,'_blank');
+document.getElementById('login-link').href=url;
 document.getElementById('login-link-box').style.display='block';
 hide('step1');show('step2');
-setTimeout(()=>pollForToken(),500);
-}catch(e){alert('Error: '+e.message);btn.disabled=false;btn.textContent='Start Device Login';}
+setTimeout(pollToken,500);
+}catch(e){alert(e.message);btn.disabled=false;btn.textContent='Start Device Login';}
 }
 
 async function proxy(url,method,headers,body){
-const resp=await fetch('/api/proxy',{
-method:'POST',
-headers:{'Content-Type':'application/json'},
-body:JSON.stringify({url,method,headers,body:body||null})
-});
-return resp.json();
+const r=await fetch('/api/proxy',{method:'POST',headers:{'Content-Type':'application/json'},
+body:JSON.stringify({url,method,headers,body:body||null})});
+return r.json();
 }
 
-async function pollForToken(){
-logStep('Polling for auth token...','');
+async function pollToken(){
+log('Polling for token...','');
 const{verifier,nonce}=pkceState;
 const params=new URLSearchParams({nonce,verifier,challenge_method:'S256'});
-const pollUrl=`${OPENAPI_BASE}/api/v1/deviceToken/poll?${params}`;
-const headers={'Accept':'application/json','Cosy-Version':CLI_VERSION,'Cosy-ClientType':CLIENT_TYPE,'Cosy-MachineOS':MACHINE_OS};
-const maxTime=Date.now()+300000;let attempts=0;
+const pollUrl=`${OPENAPI}/api/v1/deviceToken/poll?${params}`;
+const hdrs={'Accept':'application/json','Cosy-Version':VERSION,'Cosy-ClientType':CLIENT_TYPE,'Cosy-MachineOS':MACHINE_OS};
+const maxTime=Date.now()+300000;let att=0;
 while(Date.now()<maxTime){
-attempts++;
-showStatus(`<span class="spinner"></span>Waiting for authorization... (${attempts})`,'status-loading');
-const data=await proxy(pollUrl,'GET',headers);
-if(data.status===200){
-const body=JSON.parse(data.body);
-const token=body.token||body.device_token||body.access_token;
-if(token){logStep(`Token received (attempt ${attempts})`,'step-ok');pkceState.token=token;await injectTrial();return;}
+att++;
+showStatus(`<span class="spinner"></span>Waiting... (${att})`,'status-loading');
+const d=await proxy(pollUrl,'GET',hdrs);
+if(d.status===200){
+const b=JSON.parse(d.body);
+const tok=b.token||b.device_token||b.access_token;
+if(tok){log('Token received','step-ok');pkceState.token=tok;await inject();return;}
 }
-if(data.status===400||data.status===403){
-let m='Unknown';try{m=JSON.parse(data.body).errorMessage||data.body;}catch{m=data.body;}
-logStep(`Poll error: ${data.status} ${m}`,'step-fail');
-showStatus('❌ Authorization failed: '+m,'status-fail');return;
+if(d.status===400||d.status===403){
+let m;try{m=JSON.parse(d.body).errorMessage||d.body;}catch{m=d.body;}
+log('Poll error: '+d.status+' '+m,'step-fail');
+showStatus('❌ Failed: '+m,'status-fail');return;
 }
 await new Promise(r=>setTimeout(r,1500));
 }
-showStatus('❌ Timed out — please try again','status-fail');
+showStatus('❌ Timed out','status-fail');
 }
 
-// ===== WASM Auth =====
-let wasmExports=null;
-let wasmMemory=null;
+// ===== WASM =====
+let wExp=null,wMem=null;
+let wasmCtx=null;
 const objs=[null];let nextSlot=1;
 function pushObj(v){if(v===undefined)return 0;const s=nextSlot;objs[s]=v;nextSlot++;return s;}
 function getObj(s){return objs[s];}
 function dropObj(s){objs[s]=null;}
-const encoder=new TextEncoder();
-const decoder=new TextDecoder('utf-8',{ignoreBOM:true,fatal:true});
-function decodeStr(ptr,len){return decoder.decode(new Uint8Array(wasmMemory.buffer,ptr>>>0,len>>>0));}
+const enc=new TextEncoder();
+const dec=new TextDecoder('utf-8',{ignoreBOM:true,fatal:true});
+function dStr(p,l){return dec.decode(new Uint8Array(wMem.buffer,p>>>0,l>>>0));}
 
-const wasmImports={
+const wImports={
 './qoder_auth_wasm_bg.js':{
-__wbg_Error_2e59b1b37a9a34c3:function(ptr,len){return pushObj(Error(decodeStr(ptr,len)));},
-__wbg___wbindgen_is_function_49868bde5eb1e745:function(s){return typeof getObj(s)==="function"?1:0;},
-__wbg___wbindgen_is_object_40c5a80572e8f9d3:function(s){const v=getObj(s);return typeof v==="object"&&v!==null?1:0;},
-__wbg___wbindgen_is_string_b29b5c5a8065ba1a:function(s){return typeof getObj(s)==="string"?1:0;},
-__wbg___wbindgen_is_undefined_c0cca72b82b86f4d:function(s){return getObj(s)===undefined?1:0;},
-__wbg___wbindgen_throw_81fc77679af83bc6:function(ptr,len){throw new Error(decodeStr(ptr,len));},
-__wbg_call_d578befcc3145dee:function(){const a=arguments;try{return pushObj(getObj(a[0]).call(getObj(a[1]),getObj(a[2])));}catch(e){return pushObj(e);}},
-__wbg_crypto_38df2bab126b63dc:function(s){return pushObj(getObj(s).crypto);},
-__wbg_getRandomValues_c44a50d8cfdaebeb:function(){const a=arguments;try{getObj(a[0]).getRandomValues(getObj(a[1]));}catch(e){return pushObj(e);}},
-__wbg_getRandomValues_d49329ff89a07af1:function(ptr,len){try{const arr=new Uint8Array(wasmMemory.buffer,ptr>>>0,len>>>0);crypto.getRandomValues(arr);}catch(e){return pushObj(e);}},
-__wbg_length_0c32cb8543c8e4c8:function(s){return getObj(s).length;},
-__wbg_msCrypto_bd5a034af96bcba6:function(s){return 0;},
-__wbg_new_99cabae501c0a8a0:function(){return pushObj(new Map());},
-__wbg_new_with_length_9cedd08484b73942:function(len){return pushObj(new Uint8Array(len>>>0));},
-__wbg_node_84ea875411254db1:function(s){return 0;},
-__wbg_now_88621c9c9a4f3ffc:function(){return Date.now();},
-__wbg_process_44c7a14e11e9f69e:function(s){return 0;},
-__wbg_prototypesetcall_3e05eb9545565046:function(ptr,len,val){Uint8Array.prototype.set.call(new Uint8Array(wasmMemory.buffer,ptr>>>0,len>>>0),getObj(val));},
-__wbg_randomFillSync_6c25eac9869eb53e:function(){return 0;},
-__wbg_require_b4edbdcf3e2a1ef0:function(){return 0;},
-__wbg_set_08463b1df38a7e29:function(m,k,v){return pushObj(getObj(m).set(getObj(k),getObj(v)));},
-__wbg_static_accessor_GLOBAL_THIS_a1248013d790bf5f:function(){return pushObj(globalThis);},
-__wbg_static_accessor_GLOBAL_f2e0f995a21329ff:function(){return 0;},
-__wbg_static_accessor_SELF_24f78b6d23f286ea:function(){return 0;},
-__wbg_static_accessor_WINDOW_59fd959c540fe405:function(){return pushObj(window);},
-__wbg_subarray_0f98d3fb634508ad:function(s,start,end){return pushObj(getObj(s).subarray(start>>>0,end>>>0));},
-__wbg_versions_276b2795b1c6a219:function(s){return 0;},
-__wbindgen_cast_0000000000000001:function(ptr,len){return pushObj(new Uint8Array(wasmMemory.buffer,ptr>>>0,len>>>0));},
-__wbindgen_cast_0000000000000002:function(ptr,len){return pushObj(decodeStr(ptr,len));},
-__wbindgen_object_clone_ref:function(s){return pushObj(getObj(s));},
-__wbindgen_object_drop_ref:function(s){dropObj(s);},
+__wbg_Error_2e59b1b37a9a34c3:(p,l)=>pushObj(Error(dStr(p,l))),
+__wbg___wbindgen_is_function_49868bde5eb1e745:s=>typeof getObj(s)==='function'?1:0,
+__wbg___wbindgen_is_object_40c5a80572e8f9d3:s=>{const v=getObj(s);return typeof v==='object'&&v!==null?1:0;},
+__wbg___wbindgen_is_string_b29b5c5a8065ba1a:s=>typeof getObj(s)==='string'?1:0,
+__wbg___wbindgen_is_undefined_c0cca72b82b86f4d:s=>getObj(s)===undefined?1:0,
+__wbg___wbindgen_throw_81fc77679af83bc6:(p,l)=>{throw new Error(dStr(p,l));},
+__wbg_call_d578befcc3145dee:function(){try{return pushObj(getObj(arguments[0]).call(getObj(arguments[1]),getObj(arguments[2])));}catch(e){return pushObj(e);}},
+__wbg_crypto_38df2bab126b63dc:s=>pushObj(getObj(s).crypto),
+__wbg_getRandomValues_c44a50d8cfdaebeb:function(){try{getObj(arguments[0]).getRandomValues(getObj(arguments[1]));}catch(e){return pushObj(e);}},
+__wbg_getRandomValues_d49329ff89a07af1:(p,l)=>{try{crypto.getRandomValues(new Uint8Array(wMem.buffer,p>>>0,l>>>0));}catch(e){return pushObj(e);}},
+__wbg_length_0c32cb8543c8e4c8:s=>getObj(s).length,
+__wbg_msCrypto_bd5a034af96bcba6:()=>0,
+__wbg_new_99cabae501c0a8a0:()=>pushObj(new Map()),
+__wbg_new_with_length_9cedd08484b73942:l=>pushObj(new Uint8Array(l>>>0)),
+__wbg_node_84ea875411254db1:()=>0,
+__wbg_now_88621c9c9a4f3ffc:()=>Date.now(),
+__wbg_process_44c7a14e11e9f69e:()=>0,
+__wbg_prototypesetcall_3e05eb9545565046:(p,l,v)=>Uint8Array.prototype.set.call(new Uint8Array(wMem.buffer,p>>>0,l>>>0),getObj(v)),
+__wbg_randomFillSync_6c25eac9869eb53e:()=>0,
+__wbg_require_b4edbdcf3e2a1ef0:()=>0,
+__wbg_set_08463b1df38a7e29:(m,k,v)=>pushObj(getObj(m).set(getObj(k),getObj(v))),
+__wbg_static_accessor_GLOBAL_THIS_a1248013d790bf5f:()=>pushObj(globalThis),
+__wbg_static_accessor_GLOBAL_f2e0f995a21329ff:()=>0,
+__wbg_static_accessor_SELF_24f78b6d23f286ea:()=>0,
+__wbg_static_accessor_WINDOW_59fd959c540fe405:()=>pushObj(window),
+__wbg_subarray_0f98d3fb634508ad:(s,a,b)=>pushObj(getObj(s).subarray(a>>>0,b>>>0)),
+__wbg_versions_276b2795b1c6a219:()=>0,
+__wbindgen_cast_0000000000000001:(p,l)=>pushObj(new Uint8Array(wMem.buffer,p>>>0,l>>>0)),
+__wbindgen_cast_0000000000000002:(p,l)=>pushObj(dStr(p,l)),
+__wbindgen_object_clone_ref:s=>pushObj(getObj(s)),
+__wbindgen_object_drop_ref:s=>dropObj(s),
 }
 };
 
 async function loadWasm(){
-if(wasmExports)return wasmExports;
-showStatus('<span class="spinner"></span>Loading WASM module...','status-loading');
-const resp=await fetch('/qoder_auth.wasm');
-const buf=await resp.arrayBuffer();
-const{instance}=await WebAssembly.instantiate(buf,wasmImports);
-wasmExports=instance.exports;
-wasmMemory=wasmExports.memory;
-logStep('WASM module loaded','step-ok');
-logStep('WASM exports: '+Object.keys(wasmExports).filter(k=>typeof wasmExports[k]==='function').join(', '),'');
-return wasmExports;
+if(wExp)return;
+showStatus('<span class="spinner"></span>Loading WASM...','status-loading');
+const r=await fetch('/qoder_auth.wasm');
+const buf=await r.arrayBuffer();
+const{instance}=await WebAssembly.instantiate(buf,wImports);
+wExp=instance.exports;
+wMem=wExp.memory;
+log('WASM loaded','step-ok');
+log('Exports: '+Object.keys(wExp).filter(k=>typeof wExp[k]==='function').join(', '),'');
 }
 
-// Generate encrypt_user_info + key using WASM
-function generateRuntimeFields(userInfoJson){
-const e=wasmExports;
-// allocFn = e.__wbindgen_export2 (alloc), reallocFn = e.__wbindgen_export3 (realloc)
-const allocFn=e.__wbindgen_export0;
-const reallocFn=e.__wbindgen_export1;
-
-function passString(s){
-const buf=encoder.encode(s);
-const ptr=allocFn(buf.length,1)>>>0;
-new Uint8Array(wasmMemory.buffer).set(buf,ptr);
+// Pass string to WASM memory → [ptr, len]
+function passStr(s){
+const buf=enc.encode(s);
+const ptr=wExp.__wbindgen_export2(buf.length,1)>>>0;
+new Uint8Array(wMem.buffer).set(buf,ptr);
 return[ptr,buf.length];
 }
 
-const[ptr,len]=passString(userInfoJson);
-const stackPtr=e.__wbindgen_add_to_stack_pointer(-16);
+// Create QoderContext via qodercontext_new
+function createWasmCtx(machineId,cosyVersion,userInfoJson,clientMetadata){
+const e=wExp;
+const[miP,miL]=passStr(machineId);
+const[cvP,cvL]=passStr(cosyVersion);
+const[uiP,uiL]=passStr(userInfoJson);
+const[cmP,cmL]=passStr(clientMetadata);
+// qodercontext_new returns ptr directly (wasm-bindgen constructor pattern)
+const ptr=e.qodercontext_new(miP,miL,cvP,cvL,uiP,uiL,cmP,cmL);
+return ptr>>>0;
+}
+
+// Call qodercontext_prepareRequest → returns RequestResult ptr
+function wasmPrepareRequest(ctxPtr,endpoint,path,method,authMode,body,headers){
+const e=wExp;
+const[epP,epL]=passStr(endpoint);
+const[pP,pL]=passStr(path);
+const[mP,mL]=passStr(method);
+const[aP,aL]=passStr(authMode);
+let bP=0,bL=0;
+if(body){const[b1,b2]=passStr(body);bP=b1;bL=b2;}
+let hP=0,hL=0;
+if(headers){const[h1,h2]=passStr(headers);hP=h1;hL=h2;}
+const sp=e.__wbindgen_add_to_stack_pointer(-16);
 try{
-e.generate_runtime_auth_fields(ptr,len);
-const resultPtr=e.__wbindgen_add_to_stack_pointer(0); // read return
-// Read the result: [string ptr, string len]
-const dv=new DataView(wasmMemory.buffer);
-const outPtr=dv.getInt32(stackPtr,true);
-const outLen=dv.getInt32(stackPtr+4,true);
-const resultJson=decodeStr(outPtr,outLen);
-e.__wbindgen_export4(outPtr,outLen,1); // free the string
-return JSON.parse(resultJson);
+e.qodercontext_prepareRequest(sp,ctxPtr,epP,epL,pP,pL,mP,mL,aP,aL,bP,bL,hP,hL);
+const dv=new DataView(wMem.buffer);
+const rPtr=dv.getInt32(sp,true);
+const err=dv.getInt32(sp+4,true);
+if(dv.getInt32(sp+8,true))throw new Error('WASM prepareRequest error: '+err);
+return rPtr>>>0;
 }finally{
 e.__wbindgen_add_to_stack_pointer(16);
 }
 }
 
-// Create QoderContext and prepare a signed request
-function prepareRequest(endpoint,path,method,authMode,body,headers){
-const e=wasmExports;
-const allocFn=e.__wbindgen_export0;
-const reallocFn=e.__wbindgen_export1;
-
-function passString(s){
-const buf=encoder.encode(s);
-const ptr=allocFn(buf.length,1)>>>0;
-new Uint8Array(wasmMemory.buffer).set(buf,ptr);
-return[ptr,buf.length];
-}
-
-const[epPtr,epLen]=passString(endpoint);
-const[pathPtr,pathLen]=passString(path);
-const[methodPtr,methodLen]=passString(method);
-const[authPtr,authLen]=passString(authMode);
-let bodyPtr=0,bodyLen=0;
-if(body){const[bPtr,bLen]=passString(body);bodyPtr=bPtr;bodyLen=bLen;}
-let headersPtr=0,headersLen=0;
-if(headers){const[hPtr,hLen]=passString(headers);headersPtr=hPtr;headersLen=hLen;}
-
-const stackPtr=e.__wbindgen_add_to_stack_pointer(-16);
+// Read RequestResult: url, headers, body
+function readResult(rPtr){
+const e=wExp;
+let url='',body='';
+// Read URL
+let sp=e.__wbindgen_add_to_stack_pointer(-16);
 try{
-// qsA.prepareRequest(epPtr,epLen,pathPtr,pathLen,methodPtr,methodLen,authPtr,authLen,bodyPtr,bodyLen,headersPtr,headersLen)
-// But we need the QoderContext instance first...
-// This is complex - the context needs to be created first via XsA/m8n
-// For now, just try generateRuntimeFields which is simpler
-return null;
-}finally{
-e.__wbindgen_add_to_stack_pointer(16);
-}
+e.requestresult_url(sp,rPtr);
+const dv=new DataView(wMem.buffer);
+const p=dv.getInt32(sp,true),l=dv.getInt32(sp+4,true);
+url=dStr(p,l);
+e.__wbindgen_export4(p,l,1);
+}finally{e.__wbindgen_add_to_stack_pointer(16);}
+// Read headers (Map object in objs table)
+const hIdx=e.requestresult_headers(rPtr);
+const headersMap=getObj(hIdx);
+dropObj(hIdx);
+const headers={};
+if(headersMap&&headersMap.forEach){headersMap.forEach((v,k)=>headers[k]=v);}
+// Read body
+sp=e.__wbindgen_add_to_stack_pointer(-16);
+try{
+e.requestresult_body(sp,rPtr);
+const dv=new DataView(wMem.buffer);
+const p=dv.getInt32(sp,true),l=dv.getInt32(sp+4,true);
+if(p!==0){body=dStr(p,l);e.__wbindgen_export4(p,l,1);}
+}finally{e.__wbindgen_add_to_stack_pointer(16);}
+return{url,headers,body};
 }
 
-// ===== Trial Injection =====
-async function injectTrial(){
+// generate_runtime_auth_fields → encrypt_user_info + key
+function genAuthFields(userInfoJson){
+const e=wExp;
+const[p,l]=passStr(userInfoJson);
+const sp=e.__wbindgen_add_to_stack_pointer(-16);
+try{
+e.generate_runtime_auth_fields(p,l);
+const dv=new DataView(wMem.buffer);
+const rP=dv.getInt32(sp,true),rL=dv.getInt32(sp+4,true);
+if(dv.getInt32(sp+8,true))throw new Error('WASM genAuthFields error');
+const json=dStr(rP,rL);
+e.__wbindgen_export4(rP,rL,1);
+return JSON.parse(json);
+}finally{e.__wbindgen_add_to_stack_pointer(16);}
+}
+
+// ===== Inject =====
+async function inject(){
 hide('step2');show('step3');
 const token=pkceState.token;
+const mId=pkceState.machineId;
+const mTok=pkceState.machineToken;
+const mType=pkceState.machineType;
 
 // Step 1: Load WASM
-try{
-await loadWasm();
-}catch(e){
-logStep('WASM load failed: '+e.message,'step-fail');
-// Continue without WASM
-logStep('Continuing without WASM signing...','step-skip');
-}
+try{await loadWasm();}
+catch(e){log('WASM load FAILED: '+e.message,'step-fail');}
 
 // Step 2: Get userinfo
 showStatus('<span class="spinner"></span>Reading user info...','status-loading');
-const authHeaders={
-'Accept':'application/json','User-Agent':'qoder/'+CLI_VERSION,
-'Authorization':'Bearer '+token,'Cosy-Version':CLI_VERSION,
+const aH={
+'Accept':'application/json','User-Agent':'qoder/'+VERSION,
+'Authorization':'Bearer '+token,'Cosy-Version':VERSION,
 'Cosy-ClientType':CLIENT_TYPE,'Cosy-MachineOS':MACHINE_OS,
-'Cosy-MachineId':pkceState.machineId,
-'Cosy-MachineToken':pkceState.machineToken,
-'Cosy-MachineType':pkceState.machineType
+'Cosy-MachineId':mId,'Cosy-MachineToken':mTok,'Cosy-MachineType':mType
 };
-const uiData=await proxy(`${OPENAPI_BASE}/api/v1/userinfo`,'GET',authHeaders);
-const uiBody=uiData.status===200?JSON.parse(uiData.body):{};
-logStep(`GET /api/v1/userinfo → ${uiData.status}: ${uiBody.name||uiBody.email||'?'}`,'step-ok');
+const uiD=await proxy(`${OPENAPI}/api/v1/userinfo`,'GET',aH);
+const ui=uiD.status===200?JSON.parse(uiD.body):{};
+log(`GET /api/v1/userinfo → ${uiD.status}: ${ui.name||ui.email||'?'}`,'step-ok');
 
-// Step 3: Generate runtime auth fields (encrypt_user_info + key) via WASM
-let encryptUserInfo='';let key='';
-if(wasmExports){
+// Step 3: WASM — create context + generate auth fields
+let encryptInfo='',key='';
+if(wExp){
 try{
 const userInfoJson=JSON.stringify({
-uid:uiBody.uid||uiBody.id||'',
-organization_id:uiBody.organization_id||'',
-organization_tags:uiBody.organization_tags||[],
+uid:ui.uid||ui.id||'',organization_id:ui.organization_id||'',
+organization_tags:ui.organization_tags||[],data_policy_agreed:true
+});
+const clientMeta=JSON.stringify({
+client_type:CLIENT_TYPE,business_product:'qoder_work',
+business_type:'agent',scene:'assistant'
+});
+showStatus('<span class="spinner"></span>Creating WASM context...','status-loading');
+wasmCtx=createWasmCtx(mId,VERSION,JSON.stringify({uid:ui.uid||ui.id||'',encrypt_user_info:'',key:''}),clientMeta);
+log('QoderContext created (ptr='+wasmCtx+')','step-ok');
+
+showStatus('<span class="spinner"></span>Generating auth fields...','status-loading');
+const fields=genAuthFields(userInfoJson);
+encryptInfo=fields.encrypt_user_info||'';
+key=fields.key||'';
+log('encrypt_user_info: '+(encryptInfo.substring(0,30)||'empty'),'step-ok');
+log('key: '+(key.substring(0,30)||'empty'),'step-ok');
+
+// Refresh context with new auth fields
+const newUserInfoJson=JSON.stringify({
+uid:ui.uid||ui.id||'',encrypt_user_info:encryptInfo,key:key,
+organization_id:ui.organization_id||'',organization_tags:ui.organization_tags||[],
 data_policy_agreed:true
 });
-showStatus('<span class="spinner"></span>Generating WASM auth fields...','status-loading');
-const fields=generateRuntimeFields(userInfoJson);
-encryptUserInfo=fields.encrypt_user_info||'';
-key=fields.key||'';
-logStep('WASM generate_runtime_auth_fields: encrypt_user_info='+encryptUserInfo.substring(0,20)+'... key='+key.substring(0,20)+'...','step-ok');
-}catch(e){
-logStep('WASM generateRuntimeFields failed: '+e.message,'step-fail');
+// Refresh auth fields in context
+if(wExp.qodercontext_refreshAuthFields){
+const[nP,nL]=passStr(newUserInfoJson);
+wExp.qodercontext_refreshAuthFields(wasmCtx,nP,nL);
+log('Context refreshed with auth fields','step-ok');
 }
+}catch(e){log('WASM auth fields FAILED: '+e.message,'step-fail');}
 }
 
-// Step 4: POST updateDataPolicy to center.qoder.sh (WASM-signed)
-// This is the endpoint that might trigger trial!
-showStatus('<span class="spinner"></span>Triggering trial (center.qoder.sh)...','status-loading');
-const requestId=crypto.randomUUID();
-const lingmaVersion=CLI_VERSION;
-const updateTimestamp=Date.now();
-const policyPayload=JSON.stringify({
+// Step 4: WASM-signed POST to center.qoder.sh (updateDataPolicy)
+showStatus('<span class="spinner"></span>Signing request via WASM...','status-loading');
+const reqId=crypto.randomUUID();
+const policyBody=JSON.stringify({
 payload:JSON.stringify({
-uid:uiBody.uid||uiBody.id||'',
-aid:'',
-status:'AGREE',
-UpdateTimestamp:updateTimestamp,
-LingmaVersion:lingmaVersion,
-requestId:requestId
-}),
-encodeVersion:'1'
+uid:ui.uid||ui.id||'',aid:'',status:'AGREE',
+UpdateTimestamp:Date.now(),LingmaVersion:VERSION,requestId:reqId
+}),encodeVersion:'1'
 });
+const policyPath=`/api/v2/config/updateDataPolicy?requestId=${reqId}&version=2`;
 
-// Build headers for center endpoint (with WASM auth fields)
-const centerHeaders={
-'Accept':'application/json',
-'Content-Type':'application/json',
-'Authorization':'Bearer '+token,
-'Cosy-Version':CLI_VERSION,
-'Cosy-ClientType':CLIENT_TYPE,
-'Cosy-MachineOS':MACHINE_OS,
-'Cosy-MachineId':pkceState.machineId,
-'Cosy-MachineToken':pkceState.machineToken,
-'Cosy-MachineType':pkceState.machineType
-};
-if(encryptUserInfo)centerHeaders['Cosy-EncryptUserInfo']=encryptUserInfo;
-if(key)centerHeaders['Cosy-Key']=key;
+let policyD;
+if(wExp&&wasmCtx){
+try{
+// Use WASM to sign the request
+log('WASM prepareRequest for center.qoder.sh...','');
+const rPtr=wasmPrepareRequest(wasmCtx,CENTER,policyPath,'POST','auth',policyBody,null);
+const signed=readResult(rPtr);
+log('Signed URL: '+signed.url.substring(0,80),'step-ok');
+log('Signed headers: '+JSON.stringify(signed.headers).substring(0,100),'step-ok');
+log('Signed body: '+(signed.body||'').substring(0,80),'step-ok');
 
-const policyUrl=`${CENTER_BASE}/api/v2/config/updateDataPolicy?requestId=${requestId}&version=2`;
-logStep(`POST center.qoder.sh/api/v2/config/updateDataPolicy...`,'');
-const policyData=await proxy(policyUrl,'POST',centerHeaders,policyPayload);
-logStep(`  → ${policyData.status}: ${policyData.body.substring(0,100)}`,policyData.status===200?'step-ok':'step-skip');
+// Send the WASM-signed request
+showStatus('<span class="spinner"></span>Sending signed request to center.qoder.sh...','status-loading');
+policyD=await proxy(signed.url,'POST',signed.headers,signed.body||policyBody);
+log(`POST center → ${policyD.status}: ${policyD.body.substring(0,100)}`,policyD.status===200?'step-ok':'step-fail');
 
-// Step 5: Also call /api/v3/user/status (sends machineToken)
-logStep('GET /api/v3/user/status...','');
-const stData=await proxy(`${OPENAPI_BASE}/api/v3/user/status`,'GET',authHeaders);
-logStep(`  → ${stData.status}: ${stData.body.substring(0,100)}`,stData.status===200?'step-ok':'step-skip');
+// Free the result
+if(wExp.__wbg_requestresult_free)wExp.__wbg_requestresult_free(rPtr,0);
+}catch(e){
+log('WASM prepareRequest FAILED: '+e.message,'step-fail');
+// Fallback: send unsigned
+policyD=await proxy(`${CENTER}${policyPath}`,'POST',{
+'Accept':'application/json','Content-Type':'application/json',
+'Authorization':'Bearer '+token,'Cosy-Version':VERSION,'Cosy-ClientType':CLIENT_TYPE,
+'Cosy-MachineOS':MACHINE_OS,'Cosy-MachineId':mId,'Cosy-MachineToken':mTok,'Cosy-MachineType':mType
+},policyBody);
+log(`POST center (unsigned fallback) → ${policyD.status}: ${policyD.body.substring(0,100)}`,'step-skip');
+}
+}else{
+policyD=await proxy(`${CENTER}${policyPath}`,'POST',{
+'Accept':'application/json','Content-Type':'application/json',
+'Authorization':'Bearer '+token,'Cosy-Version':VERSION,'Cosy-ClientType':CLIENT_TYPE,
+'Cosy-MachineOS':MACHINE_OS,'Cosy-MachineId':mId,'Cosy-MachineToken':mTok,'Cosy-MachineType':mType
+},policyBody);
+log(`POST center (no WASM) → ${policyD.status}: ${policyD.body.substring(0,100)}`,'step-skip');
+}
 
-// Step 6: Verify plan + credits
+// Step 5: GET /api/v3/user/status
+log('GET /api/v3/user/status...','');
+const stD=await proxy(`${OPENAPI}/api/v3/user/status`,'GET',aH);
+log(`  → ${stD.status}: ${stD.body.substring(0,100)}`,stD.status===200?'step-ok':'step-skip');
+
+// Step 6: Verify
 showStatus('<span class="spinner"></span>Verifying trial...','status-loading');
-const planData=await proxy(`${OPENAPI_BASE}/api/v2/user/plan`,'GET',authHeaders);
-const planBody=planData.status===200?JSON.parse(planData.body):{};
-logStep(`GET /api/v2/user/plan → ${planData.status}: ${JSON.stringify(planBody).substring(0,80)}`,planData.status===200?'step-ok':'step-skip');
+const plD=await proxy(`${OPENAPI}/api/v2/user/plan`,'GET',aH);
+const pl=plD.status===200?JSON.parse(plD.body):{};
+log(`GET /api/v2/user/plan → ${plD.status}: ${JSON.stringify(pl).substring(0,80)}`,plD.status===200?'step-ok':'step-skip');
+const qD=await proxy(`${OPENAPI}/api/v2/quota/usage`,'GET',aH);
+const q=qD.status===200?JSON.parse(qD.body):{};
+log(`GET /api/v2/quota/usage → ${qD.status}: ${JSON.stringify(q).substring(0,80)}`,qD.status===200?'step-ok':'step-skip');
 
-const quotaData=await proxy(`${OPENAPI_BASE}/api/v2/quota/usage`,'GET',authHeaders);
-const quotaBody=quotaData.status===200?JSON.parse(quotaData.body):{};
-logStep(`GET /api/v2/quota/usage → ${quotaData.status}: ${JSON.stringify(quotaBody).substring(0,80)}`,quotaData.status===200?'step-ok':'step-skip');
-
-// Raw output
+// Raw
 const raw=document.getElementById('raw-out');
 raw.style.display='block';
-raw.textContent='userinfo: '+JSON.stringify(uiBody,null,2).substring(0,300)+
-'\n\npolicy: '+policyData.body.substring(0,300)+
-'\n\nplan: '+JSON.stringify(planBody,null,2).substring(0,300)+
-'\n\nquota: '+JSON.stringify(quotaBody,null,2).substring(0,300);
+raw.textContent='userinfo: '+JSON.stringify(ui,null,2).substring(0,300)+
+'\n\npolicy response: '+policyD.body.substring(0,300)+
+'\n\nplan: '+JSON.stringify(pl,null,2).substring(0,300)+
+'\n\nquota: '+JSON.stringify(q,null,2).substring(0,300);
 
 // Result
 const card=document.getElementById('main-card');
-const hasCredits=quotaBody.userQuota?.total>0||quotaBody.total>0;
-const isPro=planBody.plan==='pro'||planBody.plan_type==='trial'||planBody.user_type==='trial'||planBody.user_type==='pro';
-
+const hasCredits=q.userQuota?.total>0||q.total>0;
+const isPro=pl.plan==='pro'||pl.plan_type==='trial'||pl.user_type==='trial'||pl.user_type==='pro';
 if(isPro||hasCredits){
 card.className='result-ok';
 let h='<table>';
-h+='<tr><td>User</td><td>'+(uiBody.name||'?')+'</td></tr>';
-h+='<tr><td>Plan</td><td><strong>'+(planBody.plan||planBody.plan_type||'?')+'</strong></td></tr>';
-h+='<tr><td>Credits</td><td>'+(quotaBody.userQuota?.total||quotaBody.total||0)+'</td></tr>';
+h+='<tr><td>User</td><td>'+(ui.name||'?')+'</td></tr>';
+h+='<tr><td>Plan</td><td><strong>'+(pl.plan||pl.plan_type||'?')+'</strong></td></tr>';
+h+='<tr><td>Credits</td><td>'+(q.userQuota?.total||q.total||0)+'</td></tr>';
 h+='</table>';
 showStatus('✅ Inject SUCCESS — Trial Activated!'+h,'status-ok');
 }else{
 card.className='result-fail';
 let h='<table>';
-h+='<tr><td>User</td><td>'+(uiBody.name||'?')+'</td></tr>';
-h+='<tr><td>Plan</td><td>'+(planBody.plan||planBody.plan_type||'?')+'</td></tr>';
-h+='<tr><td>Type</td><td>'+(planBody.user_type||planBody.userType||'?')+'</td></tr>';
-h+='<tr><td>Credits</td><td>'+JSON.stringify(quotaBody).substring(0,100)+'</td></tr>';
-h+='<tr><td>Policy</td><td>'+policyData.status+': '+policyData.body.substring(0,80)+'</td></tr>';
+h+='<tr><td>User</td><td>'+(ui.name||'?')+'</td></tr>';
+h+='<tr><td>Plan</td><td>'+(pl.plan||pl.plan_type||'?')+'</td></tr>';
+h+='<tr><td>Type</td><td>'+(pl.user_type||pl.userType||'?')+'</td></tr>';
+h+='<tr><td>Credits</td><td>'+JSON.stringify(q).substring(0,100)+'</td></tr>';
+h+='<tr><td>Policy</td><td>'+policyD.status+': '+policyD.body.substring(0,80)+'</td></tr>';
 h+='</table>';
-showStatus('❌ Inject FAILED — Trial not granted'+h,'status-fail');
+showStatus('❌ Inject FAILED'+h,'status-fail');
 }
 }
 </script>
