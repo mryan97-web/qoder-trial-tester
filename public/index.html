@@ -45,8 +45,8 @@ summary{cursor:pointer;color:#8b949e;font-size:.85em}
 </style>
 </head>
 <body>
-<h1>Qoder Trial Flow Tester</h1>
-<p class="sub">Real PKCE Device Login flow — reverse-engineered from Qoder CLI v1.1.26 network intercept. No CLI install needed.</p>
+<h1>Qoder Trial Activator</h1>
+<p class="sub">Trigger trial activation (300 credits + 14 day Pro) via raw API — no CLI install. Reverse-engineered from CLI v1.1.26.</p>
 
 <!-- Step 1: Machine Fingerprint -->
 <div class="card">
@@ -86,8 +86,8 @@ summary{cursor:pointer;color:#8b949e;font-size:.85em}
 
 <!-- Step 4: Trial Check -->
 <div class="card" id="trial-card" style="display:none">
-<h2>Step 4: Trial Activation Check</h2>
-<p class="sub">Calls <code>/api/v1/userinfo</code> with captured token + machineToken. Shows trial status, plan, credits.</p>
+<h2>Step 4: Activate Trial (Trigger Grant)</h2>
+<p class="sub">Calls <code>/api/v1/userinfo</code> to trigger trial grant (300 credits + 14 day Pro). VM check skipped — endpoint doesn't require MachineToken.</p>
 <div class="grid2">
 <div>
 <label class="sub">Client Type</label><br>
@@ -112,7 +112,7 @@ summary{cursor:pointer;color:#8b949e;font-size:.85em}
 Spoof: set Cosy-MachineOS to macOS ARM (non-VM)
 </label>
 </div>
-<button onclick="checkTrial()" id="trial-btn">Check Trial Status</button>
+<button onclick="checkTrial()" id="trial-btn">Activate Trial</button>
 <pre id="trial-out" style="display:none"></pre>
 </div>
 
