@@ -86,6 +86,21 @@ const CLI_VERSION='0.2.11';
 const CLIENT_TYPE='6';
 const MACHINE_OS='arm64_darwin';
 
+// Generate fake machineToken (88-char base64url = 66 bytes, same format as UMID binary output)
+// Server can't decode VM info from it (xxhash64 = one-way hash)
+// vmInfo.isVm is CLIENT-SIDE telemetry only, NEVER sent to server
+function generateMachineToken(){
+const bytes=new Uint8Array(66);crypto.getRandomValues(bytes);
+let bin='';for(let i=0;i<66;i++)bin+=String.fromCharCode(bytes[i]);
+return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+
+// Generate fake machineType (hex string, same format as UMID)
+function generateMachineType(){
+return Array.from(crypto.getRandomValues(new Uint8Array(8)))
+.map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
 function show(id){document.getElementById(id).style.display='block'}
 function hide(id){document.getElementById(id).style.display='none'}
 function showStatus(msg,cls){const b=document.getElementById('status-box');b.className='status-box '+cls;b.style.display='block';b.innerHTML=msg;}
@@ -108,7 +123,9 @@ try{
 const pkce=await generatePKCE();
 const nonce=crypto.randomUUID();
 const machineId=crypto.randomUUID();
-pkceState={verifier:pkce.verifier,challenge:pkce.challenge,nonce,machineId};
+const machineToken=generateMachineToken();
+const machineType=generateMachineType();
+pkceState={verifier:pkce.verifier,challenge:pkce.challenge,nonce,machineId,machineToken,machineType};
 const loginUrl=`${WEB_BASE}/device/selectAccounts?challenge=${pkce.challenge}&challenge_method=S256&nonce=${nonce}&machine_id=${machineId}&client_id=${CLIENT_ID_IDE}`;
 window.open(loginUrl,'_blank');
 const link=document.getElementById('login-link');
@@ -299,7 +316,9 @@ const authHeaders={
 'Accept':'application/json','User-Agent':'qoder/'+CLI_VERSION,
 'Authorization':'Bearer '+token,'Cosy-Version':CLI_VERSION,
 'Cosy-ClientType':CLIENT_TYPE,'Cosy-MachineOS':MACHINE_OS,
-'Cosy-MachineId':pkceState.machineId,'Cosy-MachineToken':pkceState.machineId
+'Cosy-MachineId':pkceState.machineId,
+'Cosy-MachineToken':pkceState.machineToken,
+'Cosy-MachineType':pkceState.machineType
 };
 const uiData=await proxy(`${OPENAPI_BASE}/api/v1/userinfo`,'GET',authHeaders);
 const uiBody=uiData.status===200?JSON.parse(uiData.body):{};
@@ -352,7 +371,8 @@ const centerHeaders={
 'Cosy-ClientType':CLIENT_TYPE,
 'Cosy-MachineOS':MACHINE_OS,
 'Cosy-MachineId':pkceState.machineId,
-'Cosy-MachineToken':pkceState.machineId,
+'Cosy-MachineToken':pkceState.machineToken,
+'Cosy-MachineType':pkceState.machineType
 };
 if(encryptUserInfo)centerHeaders['Cosy-EncryptUserInfo']=encryptUserInfo;
 if(key)centerHeaders['Cosy-Key']=key;
