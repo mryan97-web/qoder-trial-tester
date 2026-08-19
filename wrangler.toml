@@ -1,0 +1,11 @@
+name = "trial-injector"
+pages_build_output_dir = "./public"
+compatibility_date = "2024-01-01"
+
+[[kv_namespaces]]
+binding = "SESSION_KV"
+id = "e5b8766ebf004aeca0b35748b7a48881"
+
+[vars]
+CLI_VERSION = "1.1.26"
+CLI_CLIENT_ID = "e883ade2-e6e3-4d6d-adf7-f92ceff5fdcb"
