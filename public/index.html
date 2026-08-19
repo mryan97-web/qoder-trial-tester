@@ -9,12 +9,15 @@
 body{font-family:system-ui,sans-serif;background:#0d1117;color:#c9d1d9;padding:20px;max-width:700px;margin:0 auto}
 h1{font-size:1.5em;margin-bottom:10px;color:#58a6ff}
 .info{background:#161b22;padding:12px;border-radius:8px;margin-bottom:15px;border:1px solid #30363d;font-size:0.85em;color:#8b949e}
-button{background:#238636;color:#fff;border:none;padding:10px 24px;border-radius:6px;font-size:1em;cursor:pointer}
+.btn-row{display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap}
+button{background:#238636;color:#fff;border:none;padding:10px 20px;border-radius:6px;font-size:0.95em;cursor:pointer}
 button:disabled{background:#21262d;color:#6e7681;cursor:wait}
+button.test-btn{background:#1f6feb}
+button.warn-btn{background:#da3633}
 .login-link-box{display:none;margin-top:10px;padding:10px;background:#1c2128;border-radius:6px;border:1px solid #30363d}
 a{color:#58a6ff}
-.step-log{background:#161b22;padding:8px 12px;border-radius:4px;margin-top:8px;font-family:monospace;font-size:0.8em;max-height:400px;overflow-y:auto;border:1px solid #30363d}
-.step-ok{color:#3fb950}.step-fail{color:#f85149}.step-skip{color:#d29922}
+.step-log{background:#161b22;padding:8px 12px;border-radius:4px;margin-top:8px;font-family:monospace;font-size:0.8em;max-height:500px;overflow-y:auto;border:1px solid #30363d}
+.step-ok{color:#3fb950}.step-fail{color:#f85149}.step-skip{color:#d29922}.step-info{color:#58a6ff}
 .status-box{padding:15px;border-radius:8px;margin-bottom:10px;display:none}
 .status-loading{background:#1c2128;border:1px solid #30363d;color:#8b949e}
 .status-ok{background:#0d2818;border:1px solid #238636;color:#3fb950}
@@ -28,13 +31,24 @@ td{padding:6px 10px;border-bottom:1px solid #30363d;font-size:0.85em}
 td:first-child{color:#8b949e;width:35%}
 #raw-out{display:none;margin-top:10px;padding:10px;background:#0d1117;border-radius:4px;font-family:monospace;font-size:0.75em;white-space:pre-wrap;word-break:break-all;color:#8b949e;max-height:300px;overflow-y:auto}
 .hidden{display:none!important}
+.session-list{margin-top:10px;padding:10px;background:#161b22;border-radius:6px;border:1px solid #30363d}
+.session-item{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #21262d;font-size:0.8em}
+.session-item:last-child{border-bottom:none}
+.heartbeat-dot{width:8px;height:8px;border-radius:50%;background:#3fb950;display:inline-block;margin-right:5px}
+.heartbeat-dot.dead{background:#f85149}
 </style>
 </head>
 <body>
 <h1>🔥 Qoder IDE Simulator</h1>
-<div class="info">Fake IDE → WASM-signed request → center.qoder.sh → Trial activated</div>
+<div class="info">Fake IDE → WASM-signed request → center.qoder.sh → Trial activated<br>Keep-alive: all injected sessions stay alive via background heartbeat</div>
 
-<div id="step1"><button id="start-btn" onclick="startLogin()">Start Device Login</button></div>
+<div class="btn-row">
+<button class="test-btn" id="test-btn" onclick="runSelfTest()">🧪 Test WASM Only (no account needed)</button>
+</div>
+
+<div id="step1" class="">
+<button id="start-btn" onclick="startLogin()">Start Device Login (real account)</button>
+</div>
 
 <div id="step2" class="hidden">
 <div class="login-link-box" id="login-link-box">
@@ -51,6 +65,13 @@ td:first-child{color:#8b949e;width:35%}
 <div id="main-card"></div>
 <div id="raw-out"></div>
 
+<div id="result-area"></div>
+
+<div class="session-list hidden" id="session-list-box">
+<strong style="color:#58a6ff;font-size:0.85em">Active Sessions (keep-alive)</strong>
+<div id="session-list"></div>
+</div>
+
 <script>
 // ===== Config =====
 let pkceState=null;
@@ -61,13 +82,83 @@ const WEB='https://qoder.com';
 const VERSION='0.2.11';
 const CLIENT_TYPE='6';
 const MACHINE_OS='arm64_darwin';
+const HEARTBEAT_MS=300000; // 5 minutes
 
+// ===== Session management (keep-alive) =====
+let sessions={}; // {sessionKey: {token, machineId, machineToken, machineType, name, lastHeartbeat, alive}}
+let heartbeatTimer=null;
+
+function loadSessions(){
+try{sessions=JSON.parse(localStorage.getItem('qoder_sessions')||'{}');}catch{sessions={};}
+}
+function saveSessions(){localStorage.setItem('qoder_sessions',JSON.stringify(sessions));}
+function addSession(key,data){sessions[key]=data;saveSessions();renderSessions();startHeartbeat();}
+function removeSession(key){delete sessions[key];saveSessions();renderSessions();}
+
+function renderSessions(){
+const box=document.getElementById('session-list-box');
+const list=document.getElementById('session-list');
+const keys=Object.keys(sessions);
+if(keys.length===0){box.classList.add('hidden');return;}
+box.classList.remove('hidden');
+list.innerHTML='';
+for(const k of keys){
+const s=sessions[k];
+const dot=s.alive?'<span class="heartbeat-dot"></span>':'<span class="heartbeat-dot dead"></span>';
+const ago=s.lastHeartbeat?Math.round((Date.now()-s.lastHeartbeat)/1000)+'s ago':'never';
+list.innerHTML+='<div class="session-item"><span>'+dot+(s.name||k)+' — '+s.status+' — 💓 '+ago+'</span><button style="background:#da3633;padding:2px 8px;font-size:0.8em" onclick="removeSession(\''+k+'\')">✕</button></div>';
+}
+}
+
+function startHeartbeat(){
+if(heartbeatTimer)clearInterval(heartbeatTimer);
+heartbeatTimer=setInterval(async()=>{
+for(const k of Object.keys(sessions)){
+const s=sessions[k];
+if(!s.alive)continue;
+try{
+const h={'Accept':'application/json','Authorization':'Bearer '+s.token,
+'Cosy-Version':VERSION,'Cosy-ClientType':CLIENT_TYPE,'Cosy-MachineOS':MACHINE_OS,
+'Cosy-MachineId':s.machineId,'Cosy-MachineToken':s.machineToken,'Cosy-MachineType':s.machineType};
+const d=await proxy(`${OPENAPI}/api/v3/user/status`,'GET',h);
+sessions[k].lastHeartbeat=Date.now();
+sessions[k].alive=d.status===200;
+saveSessions();
+}catch{sessions[k].alive=false;saveSessions();}
+}
+renderSessions();
+},HEARTBEAT_MS);
+// Also run immediately
+setTimeout(()=>{for(const k of Object.keys(sessions)){if(sessions[k].alive)heartbeatTick(k);}},1000);
+}
+
+async function heartbeatTick(k){
+const s=sessions[k];
+if(!s||!s.alive)return;
+try{
+const h={'Accept':'application/json','Authorization':'Bearer '+s.token,
+'Cosy-Version':VERSION,'Cosy-ClientType':CLIENT_TYPE,'Cosy-MachineOS':MACHINE_OS,
+'Cosy-MachineId':s.machineId,'Cosy-MachineToken':s.machineToken,'Cosy-MachineType':s.machineType};
+const d=await proxy(`${OPENAPI}/api/v3/user/status`,'GET',h);
+sessions[k].lastHeartbeat=Date.now();
+sessions[k].alive=d.status===200;
+saveSessions();renderSessions();
+}catch{sessions[k].alive=false;saveSessions();renderSessions();}
+}
+
+// Load sessions on startup
+loadSessions();
+renderSessions();
+if(Object.keys(sessions).length>0)startHeartbeat();
+
+// ===== UI helpers =====
 function show(id){document.getElementById(id).classList.remove('hidden')}
 function hide(id){document.getElementById(id).classList.add('hidden')}
 function showStatus(m,c){const b=document.getElementById('status-box');b.className='status-box '+c;b.style.display='block';b.innerHTML=m;}
 function log(t,c){document.getElementById('step-log').innerHTML+='<div class="'+(c||'')+'">'+t+'</div>';}
+function clearLog(){document.getElementById('step-log').innerHTML='';}
 
-// Fake machineToken (88-char base64url = 66 bytes, same format as UMID)
+// Fake machineToken (88-char base64url = 66 bytes)
 function genMachineToken(){
 const b=new Uint8Array(66);crypto.getRandomValues(b);
 let s='';for(let i=0;i<66;i++)s+=String.fromCharCode(b[i]);
@@ -75,6 +166,12 @@ return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 }
 function genMachineType(){
 return Array.from(crypto.getRandomValues(new Uint8Array(8))).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+async function proxy(url,method,headers,body){
+const r=await fetch('/api/proxy',{method:'POST',headers:{'Content-Type':'application/json'},
+body:JSON.stringify({url,method,headers,body:body||null})});
+return r.json();
 }
 
 // ===== PKCE =====
@@ -91,6 +188,7 @@ return{verifier:v,challenge:btoa(String.fromCharCode(...new Uint8Array(h))).repl
 async function startLogin(){
 const btn=document.getElementById('start-btn');
 btn.disabled=true;btn.textContent='Generating...';
+clearLog();
 try{
 const pkce=await genPKCE();
 const nonce=crypto.randomUUID();
@@ -101,15 +199,9 @@ const url=`${WEB}/device/selectAccounts?challenge=${pkce.challenge}&challenge_me
 window.open(url,'_blank');
 document.getElementById('login-link').href=url;
 document.getElementById('login-link-box').style.display='block';
-hide('step1');show('step2');
+hide('step1');show('step2');show('step3');
 setTimeout(pollToken,500);
-}catch(e){alert(e.message);btn.disabled=false;btn.textContent='Start Device Login';}
-}
-
-async function proxy(url,method,headers,body){
-const r=await fetch('/api/proxy',{method:'POST',headers:{'Content-Type':'application/json'},
-body:JSON.stringify({url,method,headers,body:body||null})});
-return r.json();
+}catch(e){alert(e.message);btn.disabled=false;btn.textContent='Start Device Login (real account)';}
 }
 
 async function pollToken(){
@@ -140,7 +232,6 @@ showStatus('❌ Timed out','status-fail');
 
 // ===== WASM =====
 let wExp=null,wMem=null;
-let wasmCtx=null;
 const objs=[null];let nextSlot=1;
 function pushObj(v){if(v===undefined)return 0;const s=nextSlot;objs[s]=v;nextSlot++;return s;}
 function getObj(s){return objs[s];}
@@ -186,18 +277,22 @@ __wbindgen_object_drop_ref:s=>dropObj(s),
 };
 
 async function loadWasm(){
-if(wExp)return;
+if(wExp)return true;
 showStatus('<span class="spinner"></span>Loading WASM...','status-loading');
+log('Fetching /qoder_auth.wasm...','');
 const r=await fetch('/qoder_auth.wasm');
 const buf=await r.arrayBuffer();
+log('WASM file: '+buf.byteLength+' bytes','step-ok');
+log('Instantiating WASM...','');
 const{instance}=await WebAssembly.instantiate(buf,wImports);
 wExp=instance.exports;
 wMem=wExp.memory;
-log('WASM loaded','step-ok');
-log('Exports: '+Object.keys(wExp).filter(k=>typeof wExp[k]==='function').join(', '),'');
+log('WASM loaded!','step-ok');
+const fns=Object.keys(wExp).filter(k=>typeof wExp[k]==='function');
+log('Exports ('+fns.length+'): '+fns.join(', '),'step-info');
+return true;
 }
 
-// Pass string to WASM memory → [ptr, len]
 function passStr(s){
 const buf=enc.encode(s);
 const ptr=wExp.__wbindgen_export2(buf.length,1)>>>0;
@@ -205,21 +300,30 @@ new Uint8Array(wMem.buffer).set(buf,ptr);
 return[ptr,buf.length];
 }
 
-// Create QoderContext via qodercontext_new
-function createWasmCtx(machineId,cosyVersion,userInfoJson,clientMetadata){
-const e=wExp;
+function createWasmCtx(machineId,cosyVersion,userInfoJson,clientMeta){
 const[miP,miL]=passStr(machineId);
 const[cvP,cvL]=passStr(cosyVersion);
 const[uiP,uiL]=passStr(userInfoJson);
-const[cmP,cmL]=passStr(clientMetadata);
-// qodercontext_new returns ptr directly (wasm-bindgen constructor pattern)
-const ptr=e.qodercontext_new(miP,miL,cvP,cvL,uiP,uiL,cmP,cmL);
+const[cmP,cmL]=passStr(clientMeta);
+const ptr=wExp.qodercontext_new(miP,miL,cvP,cvL,uiP,uiL,cmP,cmL);
 return ptr>>>0;
 }
 
-// Call qodercontext_prepareRequest → returns RequestResult ptr
+function genAuthFields(userInfoJson){
+const[p,l]=passStr(userInfoJson);
+const sp=wExp.__wbindgen_add_to_stack_pointer(-16);
+try{
+wExp.generate_runtime_auth_fields(p,l);
+const dv=new DataView(wMem.buffer);
+const rP=dv.getInt32(sp,true),rL=dv.getInt32(sp+4,true);
+if(dv.getInt32(sp+8,true))throw new Error('WASM genAuthFields error');
+const json=dStr(rP,rL);
+wExp.__wbindgen_export4(rP,rL,1);
+return JSON.parse(json);
+}finally{wExp.__wbindgen_add_to_stack_pointer(16);}
+}
+
 function wasmPrepareRequest(ctxPtr,endpoint,path,method,authMode,body,headers){
-const e=wExp;
 const[epP,epL]=passStr(endpoint);
 const[pP,pL]=passStr(path);
 const[mP,mL]=passStr(method);
@@ -228,63 +332,139 @@ let bP=0,bL=0;
 if(body){const[b1,b2]=passStr(body);bP=b1;bL=b2;}
 let hP=0,hL=0;
 if(headers){const[h1,h2]=passStr(headers);hP=h1;hL=h2;}
-const sp=e.__wbindgen_add_to_stack_pointer(-16);
+const sp=wExp.__wbindgen_add_to_stack_pointer(-16);
 try{
-e.qodercontext_prepareRequest(sp,ctxPtr,epP,epL,pP,pL,mP,mL,aP,aL,bP,bL,hP,hL);
+wExp.qodercontext_prepareRequest(sp,ctxPtr,epP,epL,pP,pL,mP,mL,aP,aL,bP,bL,hP,hL);
 const dv=new DataView(wMem.buffer);
 const rPtr=dv.getInt32(sp,true);
-const err=dv.getInt32(sp+4,true);
-if(dv.getInt32(sp+8,true))throw new Error('WASM prepareRequest error: '+err);
+if(dv.getInt32(sp+8,true))throw new Error('prepareRequest error');
 return rPtr>>>0;
-}finally{
-e.__wbindgen_add_to_stack_pointer(16);
-}
+}finally{wExp.__wbindgen_add_to_stack_pointer(16);}
 }
 
-// Read RequestResult: url, headers, body
 function readResult(rPtr){
-const e=wExp;
 let url='',body='';
-// Read URL
-let sp=e.__wbindgen_add_to_stack_pointer(-16);
+let sp=wExp.__wbindgen_add_to_stack_pointer(-16);
 try{
-e.requestresult_url(sp,rPtr);
+wExp.requestresult_url(sp,rPtr);
 const dv=new DataView(wMem.buffer);
 const p=dv.getInt32(sp,true),l=dv.getInt32(sp+4,true);
-url=dStr(p,l);
-e.__wbindgen_export4(p,l,1);
-}finally{e.__wbindgen_add_to_stack_pointer(16);}
-// Read headers (Map object in objs table)
-const hIdx=e.requestresult_headers(rPtr);
-const headersMap=getObj(hIdx);
-dropObj(hIdx);
+url=dStr(p,l);wExp.__wbindgen_export4(p,l,1);
+}finally{wExp.__wbindgen_add_to_stack_pointer(16);}
+const hIdx=wExp.requestresult_headers(rPtr);
+const hm=getObj(hIdx);dropObj(hIdx);
 const headers={};
-if(headersMap&&headersMap.forEach){headersMap.forEach((v,k)=>headers[k]=v);}
-// Read body
-sp=e.__wbindgen_add_to_stack_pointer(-16);
+if(hm&&hm.forEach)hm.forEach((v,k)=>headers[k]=v);
+sp=wExp.__wbindgen_add_to_stack_pointer(-16);
 try{
-e.requestresult_body(sp,rPtr);
+wExp.requestresult_body(sp,rPtr);
 const dv=new DataView(wMem.buffer);
 const p=dv.getInt32(sp,true),l=dv.getInt32(sp+4,true);
-if(p!==0){body=dStr(p,l);e.__wbindgen_export4(p,l,1);}
-}finally{e.__wbindgen_add_to_stack_pointer(16);}
+if(p!==0){body=dStr(p,l);wExp.__wbindgen_export4(p,l,1);}
+}finally{wExp.__wbindgen_add_to_stack_pointer(16);}
 return{url,headers,body};
 }
 
-// generate_runtime_auth_fields → encrypt_user_info + key
-function genAuthFields(userInfoJson){
-const e=wExp;
-const[p,l]=passStr(userInfoJson);
-const sp=e.__wbindgen_add_to_stack_pointer(-16);
+// ===== SELF TEST (no account needed) =====
+async function runSelfTest(){
+const btn=document.getElementById('test-btn');
+btn.disabled=true;btn.textContent='Testing...';
+clearLog();show('step3');
+document.getElementById('step-log').innerHTML='';
+const result=document.getElementById('result-area');
+result.innerHTML='';
+
+let allOk=true;
+
+// Test 1: WASM load
+log('===== TEST 1: WASM Load =====','step-info');
 try{
-e.generate_runtime_auth_fields(p,l);
-const dv=new DataView(wMem.buffer);
-const rP=dv.getInt32(sp,true),rL=dv.getInt32(sp+4,true);
-if(dv.getInt32(sp+8,true))throw new Error('WASM genAuthFields error');
-const json=dStr(rP,rL);
-e.__wbindgen_export4(rP,rL,1);
-return JSON.parse(json);
-}finally{e.__wbindgen_add_to_stack_pointer(16);}
+await loadWasm();
+log('✅ WASM loaded successfully','step-ok');
+}catch(e){
+log('❌ WASM FAILED: '+e.message,'step-fail');
+log('Stack: '+(e.stack||'').substring(0,200),'step-fail');
+btn.disabled=false;btn.textContent='🧪 Test WASM Only';
+showStatus('❌ WASM test failed — browser cannot load WASM. Report this error.','status-fail');
+return;
+}
+
+// Test 2: Create QoderContext
+log('===== TEST 2: Create QoderContext =====','step-info');
+let ctxPtr=0;
+try{
+const machineId=crypto.randomUUID();
+const userInfoJson=JSON.stringify({uid:'test-uid',encrypt_user_info:'',key:''});
+const clientMeta=JSON.stringify({client_type:'6',business_product:'qoder_work',business_type:'agent',scene:'assistant'});
+ctxPtr=createWasmCtx(machineId,VERSION,userInfoJson,clientMeta);
+log('✅ QoderContext created (ptr='+ctxPtr+')','step-ok');
+}catch(e){
+log('❌ Create context FAILED: '+e.message,'step-fail');
+allOk=false;
+}
+
+// Test 3: generate_runtime_auth_fields
+log('===== TEST 3: generate_runtime_auth_fields =====','step-info');
+let encryptInfo='',key='';
+try{
+const userInfoJson=JSON.stringify({uid:'test-uid',organization_id:'',organization_tags:[],data_policy_agreed:true});
+const fields=genAuthFields(userInfoJson);
+encryptInfo=fields.encrypt_user_info||'';
+key=fields.key||'';
+log('✅ encrypt_user_info: '+(encryptInfo.substring(0,40)||'empty'),'step-ok');
+log('  key: '+(key.substring(0,40)||'empty'),'step-ok');
+}catch(e){
+log('❌ genAuthFields FAILED: '+e.message,'step-fail');
+allOk=false;
+}
+
+// Test 4: prepareRequest (WASM signing)
+log('===== TEST 4: WASM prepareRequest =====','step-info');
+try{
+if(ctxPtr>0){
+const body=JSON.stringify({payload:JSON.stringify({uid:'test-uid',aid:'',status:'AGREE',UpdateTimestamp:Date.now(),LingmaVersion:VERSION,requestId:'test-req-123'}),encodeVersion:'1'});
+const path='/api/v2/config/updateDataPolicy?requestId=test-req-123&version=2';
+const rPtr=wasmPrepareRequest(ctxPtr,CENTER,path,'POST','auth',body,null);
+log('RequestResult ptr: '+rPtr,'step-info');
+const signed=readResult(rPtr);
+log('✅ Signed URL: '+signed.url.substring(0,120),'step-ok');
+log('✅ Signed headers: '+JSON.stringify(signed.headers).substring(0,150),'step-ok');
+log('✅ Signed body: '+(signed.body||'').substring(0,100),'step-ok');
+// Check if URL differs from unsigned
+if(signed.url.includes('?requestId=test-req-123&version=2')){
+log('  URL matches path (no extra WASM params)','step-info');
+}
+if(wExp.__wbg_requestresult_free)wExp.__wbg_requestresult_free(rPtr,0);
+}
+}catch(e){
+log('❌ prepareRequest FAILED: '+e.message,'step-fail');
+log('Stack: '+(e.stack||'').substring(0,200),'step-fail');
+allOk=false;
+}
+
+// Test 5: Proxy reachability
+log('===== TEST 5: Proxy + center.qoder.sh reachability =====','step-info');
+try{
+const pingD=await proxy(`${CENTER}/api/v2/config/updateDataPolicy?requestId=ping&version=2`,'POST',
+{'Accept':'application/json','Content-Type':'application/json','Authorization':'Bearer test'},'{}');
+log('center.qoder.sh POST → '+pingD.status+': '+pingD.body.substring(0,80),(pingD.status!==404&&pingD.status!==0)?'step-ok':'step-skip');
+if(pingD.status===404)log('  404 expected for unsigned request (WASM signing adds params)','step-info');
+}catch(e){
+log('❌ Proxy test FAILED: '+e.message,'step-fail');
+allOk=false;
+}
+
+// Summary
+log('===== SUMMARY =====','step-info');
+if(allOk){
+log('✅ ALL TESTS PASSED — ready to inject real account','step-ok');
+showStatus('✅ Self-test PASSED! WASM works in your browser. Safe to inject real account.<br><br>Click "Start Device Login" to begin.','status-ok');
+}else{
+log('⚠️ Some tests failed — check logs above','step-fail');
+showStatus('⚠️ Some tests failed. Check the logs. May still work for injection.','status-fail');
+}
+
+btn.disabled=false;btn.textContent='🧪 Test WASM Only (no account needed)';
 }
 
 // ===== Inject =====
@@ -296,105 +476,64 @@ const mTok=pkceState.machineToken;
 const mType=pkceState.machineType;
 
 // Step 1: Load WASM
+log('===== INJECT: Loading WASM =====','step-info');
 try{await loadWasm();}
 catch(e){log('WASM load FAILED: '+e.message,'step-fail');}
 
 // Step 2: Get userinfo
 showStatus('<span class="spinner"></span>Reading user info...','status-loading');
-const aH={
-'Accept':'application/json','User-Agent':'qoder/'+VERSION,
-'Authorization':'Bearer '+token,'Cosy-Version':VERSION,
-'Cosy-ClientType':CLIENT_TYPE,'Cosy-MachineOS':MACHINE_OS,
-'Cosy-MachineId':mId,'Cosy-MachineToken':mTok,'Cosy-MachineType':mType
-};
+const aH={'Accept':'application/json','User-Agent':'qoder/'+VERSION,
+'Authorization':'Bearer '+token,'Cosy-Version':VERSION,'Cosy-ClientType':CLIENT_TYPE,
+'Cosy-MachineOS':MACHINE_OS,'Cosy-MachineId':mId,'Cosy-MachineToken':mTok,'Cosy-MachineType':mType};
 const uiD=await proxy(`${OPENAPI}/api/v1/userinfo`,'GET',aH);
 const ui=uiD.status===200?JSON.parse(uiD.body):{};
 log(`GET /api/v1/userinfo → ${uiD.status}: ${ui.name||ui.email||'?'}`,'step-ok');
 
-// Step 3: WASM — create context + generate auth fields
-let encryptInfo='',key='';
+// Step 3: WASM context + auth fields
+let encryptInfo='',key='';let wasmCtx=0;
 if(wExp){
 try{
-const userInfoJson=JSON.stringify({
-uid:ui.uid||ui.id||'',organization_id:ui.organization_id||'',
-organization_tags:ui.organization_tags||[],data_policy_agreed:true
-});
-const clientMeta=JSON.stringify({
-client_type:CLIENT_TYPE,business_product:'qoder_work',
-business_type:'agent',scene:'assistant'
-});
+const userInfoJson=JSON.stringify({uid:ui.uid||ui.id||'',encrypt_user_info:'',key:''});
+const clientMeta=JSON.stringify({client_type:'6',business_product:'qoder_work',business_type:'agent',scene:'assistant'});
 showStatus('<span class="spinner"></span>Creating WASM context...','status-loading');
-wasmCtx=createWasmCtx(mId,VERSION,JSON.stringify({uid:ui.uid||ui.id||'',encrypt_user_info:'',key:''}),clientMeta);
+wasmCtx=createWasmCtx(mId,VERSION,userInfoJson,clientMeta);
 log('QoderContext created (ptr='+wasmCtx+')','step-ok');
-
-showStatus('<span class="spinner"></span>Generating auth fields...','status-loading');
-const fields=genAuthFields(userInfoJson);
-encryptInfo=fields.encrypt_user_info||'';
-key=fields.key||'';
+const fieldsJson=JSON.stringify({uid:ui.uid||ui.id||'',organization_id:ui.organization_id||'',organization_tags:ui.organization_tags||[],data_policy_agreed:true});
+const fields=genAuthFields(fieldsJson);
+encryptInfo=fields.encrypt_user_info||'';key=fields.key||'';
 log('encrypt_user_info: '+(encryptInfo.substring(0,30)||'empty'),'step-ok');
 log('key: '+(key.substring(0,30)||'empty'),'step-ok');
-
-// Refresh context with new auth fields
-const newUserInfoJson=JSON.stringify({
-uid:ui.uid||ui.id||'',encrypt_user_info:encryptInfo,key:key,
-organization_id:ui.organization_id||'',organization_tags:ui.organization_tags||[],
-data_policy_agreed:true
-});
-// Refresh auth fields in context
-if(wExp.qodercontext_refreshAuthFields){
-const[nP,nL]=passStr(newUserInfoJson);
+if(wExp.qodercontext_refreshAuthFields&&encryptInfo){
+const[nP,nL]=passStr(JSON.stringify({uid:ui.uid||ui.id||'',encrypt_user_info:encryptInfo,key:key}));
 wExp.qodercontext_refreshAuthFields(wasmCtx,nP,nL);
-log('Context refreshed with auth fields','step-ok');
+log('Context refreshed','step-ok');
 }
-}catch(e){log('WASM auth fields FAILED: '+e.message,'step-fail');}
+}catch(e){log('WASM context FAILED: '+e.message,'step-fail');}
 }
 
-// Step 4: WASM-signed POST to center.qoder.sh (updateDataPolicy)
-showStatus('<span class="spinner"></span>Signing request via WASM...','status-loading');
+// Step 4: WASM-signed POST to center.qoder.sh
+showStatus('<span class="spinner"></span>Signing + sending to center.qoder.sh...','status-loading');
 const reqId=crypto.randomUUID();
-const policyBody=JSON.stringify({
-payload:JSON.stringify({
-uid:ui.uid||ui.id||'',aid:'',status:'AGREE',
-UpdateTimestamp:Date.now(),LingmaVersion:VERSION,requestId:reqId
-}),encodeVersion:'1'
-});
+const policyBody=JSON.stringify({payload:JSON.stringify({uid:ui.uid||ui.id||'',aid:'',status:'AGREE',UpdateTimestamp:Date.now(),LingmaVersion:VERSION,requestId:reqId}),encodeVersion:'1'});
 const policyPath=`/api/v2/config/updateDataPolicy?requestId=${reqId}&version=2`;
-
 let policyD;
-if(wExp&&wasmCtx){
+if(wExp&&wasmCtx>0){
 try{
-// Use WASM to sign the request
-log('WASM prepareRequest for center.qoder.sh...','');
+log('WASM prepareRequest...','');
 const rPtr=wasmPrepareRequest(wasmCtx,CENTER,policyPath,'POST','auth',policyBody,null);
 const signed=readResult(rPtr);
-log('Signed URL: '+signed.url.substring(0,80),'step-ok');
-log('Signed headers: '+JSON.stringify(signed.headers).substring(0,100),'step-ok');
-log('Signed body: '+(signed.body||'').substring(0,80),'step-ok');
-
-// Send the WASM-signed request
-showStatus('<span class="spinner"></span>Sending signed request to center.qoder.sh...','status-loading');
+log('Signed URL: '+signed.url.substring(0,100),'step-ok');
+log('Signed headers: '+JSON.stringify(signed.headers).substring(0,120),'step-ok');
 policyD=await proxy(signed.url,'POST',signed.headers,signed.body||policyBody);
 log(`POST center → ${policyD.status}: ${policyD.body.substring(0,100)}`,policyD.status===200?'step-ok':'step-fail');
-
-// Free the result
 if(wExp.__wbg_requestresult_free)wExp.__wbg_requestresult_free(rPtr,0);
 }catch(e){
 log('WASM prepareRequest FAILED: '+e.message,'step-fail');
-// Fallback: send unsigned
-policyD=await proxy(`${CENTER}${policyPath}`,'POST',{
-'Accept':'application/json','Content-Type':'application/json',
-'Authorization':'Bearer '+token,'Cosy-Version':VERSION,'Cosy-ClientType':CLIENT_TYPE,
-'Cosy-MachineOS':MACHINE_OS,'Cosy-MachineId':mId,'Cosy-MachineToken':mTok,'Cosy-MachineType':mType
-},policyBody);
-log(`POST center (unsigned fallback) → ${policyD.status}: ${policyD.body.substring(0,100)}`,'step-skip');
+policyD={status:0,body:'WASM error: '+e.message};
 }
 }else{
-policyD=await proxy(`${CENTER}${policyPath}`,'POST',{
-'Accept':'application/json','Content-Type':'application/json',
-'Authorization':'Bearer '+token,'Cosy-Version':VERSION,'Cosy-ClientType':CLIENT_TYPE,
-'Cosy-MachineOS':MACHINE_OS,'Cosy-MachineId':mId,'Cosy-MachineToken':mTok,'Cosy-MachineType':mType
-},policyBody);
-log(`POST center (no WASM) → ${policyD.status}: ${policyD.body.substring(0,100)}`,'step-skip');
+policyD=await proxy(`${CENTER}${policyPath}`,'POST',aH,policyBody);
+log(`POST center (unsigned) → ${policyD.status}: ${policyD.body.substring(0,100)}`,'step-skip');
 }
 
 // Step 5: GET /api/v3/user/status
@@ -415,7 +554,7 @@ log(`GET /api/v2/quota/usage → ${qD.status}: ${JSON.stringify(q).substring(0,8
 const raw=document.getElementById('raw-out');
 raw.style.display='block';
 raw.textContent='userinfo: '+JSON.stringify(ui,null,2).substring(0,300)+
-'\n\npolicy response: '+policyD.body.substring(0,300)+
+'\n\npolicy: '+policyD.body.substring(0,300)+
 '\n\nplan: '+JSON.stringify(pl,null,2).substring(0,300)+
 '\n\nquota: '+JSON.stringify(q,null,2).substring(0,300);
 
@@ -431,6 +570,9 @@ h+='<tr><td>Plan</td><td><strong>'+(pl.plan||pl.plan_type||'?')+'</strong></td><
 h+='<tr><td>Credits</td><td>'+(q.userQuota?.total||q.total||0)+'</td></tr>';
 h+='</table>';
 showStatus('✅ Inject SUCCESS — Trial Activated!'+h,'status-ok');
+// Save session for keep-alive
+const sessionKey=ui.uid||ui.id||Date.now().toString();
+addSession(sessionKey,{token,machineId:mId,machineToken:mTok,machineType:mType,name:ui.name||ui.email||sessionKey,status:'trial',lastHeartbeat:Date.now(),alive:true});
 }else{
 card.className='result-fail';
 let h='<table>';
