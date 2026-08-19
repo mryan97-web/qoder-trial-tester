@@ -6,121 +6,95 @@
 <title>Qoder Trial Injector</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#0d1117;color:#c9d1d9;font-family:-apple-system,system-ui,sans-serif;padding:20px;max-width:600px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;justify-content:center}
-h1{color:#58a6ff;margin-bottom:4px;font-size:1.4em;text-align:center}
-.sub{color:#8b949e;margin-bottom:16px;font-size:.8em;text-align:center}
-.card{background:#161b22;border:1px solid #30363d;border-radius:10px;padding:20px;margin-bottom:12px}
-button{background:#238636;color:#fff;border:none;cursor:pointer;padding:12px 20px;font-weight:bold;font-size:15px;border-radius:8px;width:100%;transition:.2s}
-button:hover{background:#2ea043}
-button:disabled{background:#21262d;color:#484f58;cursor:not-allowed}
-button.secondary{background:#1f6feb;font-size:13px;padding:10px 16px}
-button.secondary:hover{background:#388bfd}
-.spinner{display:inline-block;width:16px;height:16px;border:2px solid #30363d;border-top:2px solid #58a6ff;border-radius:50%;animation:spin 1s linear infinite;vertical-align:middle;margin-right:6px}
-@keyframes spin{to{transform:rotate(360deg)}}
-pre{background:#010409;border:1px solid #21262d;border-radius:8px;padding:12px;overflow-x:auto;font-size:11px;line-height:1.5;white-space:pre-wrap;word-break:break-all;max-height:300px;overflow-y:auto;margin-top:10px}
-.result-ok{border-color:#238636!important}
-.result-fail{border-color:#da3633!important}
-.status-box{padding:14px;border-radius:8px;margin-top:10px;text-align:center;font-size:15px;font-weight:bold;display:none}
+body{font-family:system-ui,sans-serif;background:#0d1117;color:#c9d1d9;padding:20px;max-width:700px;margin:0 auto}
+h1{font-size:1.5em;margin-bottom:10px;color:#58a6ff}
+.info{background:#161b22;padding:12px;border-radius:8px;margin-bottom:15px;border:1px solid #30363d;font-size:0.85em;color:#8b949e}
+#step1,#step2,#step3,#step4{display:none;margin-bottom:15px}
+button{background:#238636;color:#fff;border:none;padding:10px 24px;border-radius:6px;font-size:1em;cursor:pointer}
+button:disabled{background:#21262d;color:#6e7681;cursor:wait}
+.login-link-box{display:none;margin-top:10px;padding:10px;background:#1c2128;border-radius:6px;border:1px solid #30363d}
+a{color:#58a6ff;text-decoration:underline}
+.step-log{background:#161b22;padding:8px 12px;border-radius:4px;margin-top:8px;font-family:monospace;font-size:0.8em;max-height:300px;overflow-y:auto;border:1px solid #30363d}
+.step-ok{color:#3fb950}.step-fail{color:#f85149}.step-skip{color:#d29922}
+.status-box{padding:15px;border-radius:8px;margin-bottom:10px;display:none}
+.status-loading{background:#1c2128;border:1px solid #30363d;color:#8b949e}
 .status-ok{background:#0d2818;border:1px solid #238636;color:#3fb950}
-.status-fail{background:#2d1117;border:1px solid #da3633;color:#f85149}
-.status-loading{background:#1c1c0d;border:1px solid #d29922;color:#d29922}
-table{width:100%;border-collapse:collapse;font-size:.82em;margin-top:8px}
-td{padding:6px 8px;border-bottom:1px solid #21262d}
+.status-fail{background:#2d0d0d;border:1px solid #f85149;color:#f85149}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid #30363d;border-top-color:#58a6ff;border-radius:50%;animation:sp 1s linear infinite;margin-right:5px;vertical-align:middle}
+@keyframes sp{to{transform:rotate(360deg)}}
+#main-card{background:#161b22;border-radius:8px;padding:0;margin-top:10px}
+.result-ok{border:2px solid #238636}.result-fail{border:2px solid #f85149}
+table{width:100%;border-collapse:collapse}
+td{padding:6px 10px;border-bottom:1px solid #30363d;font-size:0.85em}
 td:first-child{color:#8b949e;width:35%}
-td:last-child{color:#c9d1d9;word-break:break-all}
-.step-log{text-align:left;font-size:.8em;color:#8b949e;margin-top:8px;line-height:1.6}
-.step-ok{color:#3fb950}
-.step-fail{color:#f85149}
-.step-skip{color:#d29922}
-.login-link{display:none;margin-top:12px;padding:14px;background:#0d1117;border:1px solid #1f6feb;border-radius:8px;text-align:center}
-.login-link a{color:#58a6ff;font-size:14px;font-weight:bold;text-decoration:none}
-.login-link a:hover{text-decoration:underline}
-.login-link .hint{color:#8b949e;font-size:.72em;margin-top:6px}
-.hidden{display:none!important}
-details{margin-top:8px}
-summary{cursor:pointer;color:#8b949e;font-size:.8em}
-.code{background:#010409;padding:2px 6px;border-radius:4px;font-family:monospace;font-size:.85em;color:#79c0ff}
+#raw-out{display:none;margin-top:10px;padding:10px;background:#0d1117;border-radius:4px;font-family:monospace;font-size:0.75em;white-space:pre-wrap;word-break:break-all;color:#8b949e;max-height:200px;overflow-y:auto}
+details{margin-top:10px}
+summary{cursor:pointer;color:#58a6ff;font-size:0.85em}
+details table{margin-top:8px}
+code{background:#1c2128;padding:1px 4px;border-radius:3px;font-size:0.9em;color:#f0883e}
 </style>
 </head>
 <body>
-<h1>Qoder Trial Injector</h1>
-<p class="sub">Zero install. Web-based device login → trigger Pro Trial + 300 Credits. No CLI, no IDE, no download.</p>
+<h1>🔥 Qoder Trial Injector</h1>
+<div class="info">PKCE Login → WASM Auth Signing → center.qoder.sh → Trial Grant</div>
 
-<div class="card" id="main-card">
 <div id="step1">
-<p style="margin-bottom:12px">Click below to start device login. You'll authorize on qoder.com, then trial triggers automatically.</p>
-<button onclick="startLogin()" id="start-btn">Start Device Login</button>
+<button id="start-btn" onclick="startLogin()">Start Device Login</button>
 </div>
 
-<div id="step2" class="hidden">
-<p style="margin-bottom:8px;font-size:.85em">Step 1: Authorize on Qoder</p>
-<div class="login-link" id="login-link-box">
-<a id="login-link" href="#" target="_blank">Open Qoder Login →</a>
-<p class="hint">Click the link, sign in with your Qoder account, and authorize the device.<br>Then come back here and click "I've Authorized".</p>
+<div id="step2">
+<div class="login-link-box" id="login-link-box">
+<p>Authorize at: <a id="login-link" href="#" target="_blank">qoder.com/device</a></p>
+<p style="font-size:0.8em;color:#8b949e">Auto-polling...</p>
 </div>
-<button onclick="pollForToken()" id="poll-btn" class="secondary" style="margin-top:12px">I've Authorized — Continue</button>
 </div>
 
-<div id="step3" class="hidden">
-<p style="margin-bottom:8px;font-size:.85em">Step 2: Injecting trial...</p>
-<div class="status-box" id="status-box"></div>
+<div id="step3">
+<div id="status-box" class="status-box"></div>
 <div class="step-log" id="step-log"></div>
-<pre id="raw-out" style="display:none"></pre>
 </div>
-</div>
+
+<div id="main-card"></div>
+<div id="raw-out"></div>
 
 <details>
-<summary>How it works (technical)</summary>
-<table style="margin-top:8px">
+<summary>Technical details</summary>
+<table>
 <tr><td>Auth flow</td><td>PKCE S256 Device Login (OAuth 2.0)</td></tr>
-<tr><td>Client ID</td><td><code>e883ade2-e6e3-4d6d-adf7-f92ceff5fdcb</code> (IDE)</td></tr>
-<tr><td>Login URL</td><td><code>qoder.com/device/selectAccounts</code></td></tr>
-<tr><td>Token poll</td><td><code>openapi.qoder.sh/api/v1/deviceToken/poll</code></td></tr>
-<tr><td>Step 3</td><td>GET <code>/api/v3/user/status</code> — trigger trial grant</td></tr>
-<tr><td>Step 4</td><td>GET <code>/api/v2/user/plan</code> — verify trial</td></tr>
-<tr><td>Step 5</td><td>GET <code>/api/v2/quota/usage</code> — verify credits</td></tr>
-<tr><td>VM bypass</td><td>No MachineToken sent (optional per CLI code). CF edge IP.</td></tr>
-<tr><td>Trial rules</td><td>First sign-in only · Non-VM · 1 account per user</td></tr>
+<tr><td>Client ID</td><td><code>e883ade2</code> (IDE)</td></tr>
+<tr><td>WASM</td><td>qoder_auth_wasm loaded in browser</td></tr>
+<tr><td>Step 1</td><td>POST <code>/api/v1/deviceToken/poll</code> → get token</td></tr>
+<tr><td>Step 2</td><td>WASM generate_runtime_auth_fields → encrypt_user_info + key</td></tr>
+<tr><td>Step 3</td><td>GET <code>/api/v1/userinfo</code> → read user</td></tr>
+<tr><td>Step 4</td><td>POST <code>center.qoder.sh/api/v2/config/updateDataPolicy</code> → trigger trial (WASM-signed)</td></tr>
+<tr><td>Step 5</td><td>GET <code>/api/v2/user/plan</code> + <code>/api/v2/quota/usage</code> → verify</td></tr>
 </table>
 </details>
 
 <script>
-// PKCE + device login state
-let pkceState = null;
+// ===== PKCE + Device Login =====
+let pkceState=null;
+const CLIENT_ID_IDE='e883ade2-e6e3-4d6d-adf7-f92ceff5fdcb';
+const OPENAPI_BASE='https://openapi.qoder.sh';
+const CENTER_BASE='https://center.qoder.sh';
+const WEB_BASE='https://qoder.com';
+const CLI_VERSION='0.2.11';
+const CLIENT_TYPE='6';
+const MACHINE_OS='arm64_darwin';
 
-const CLIENT_ID_IDE = 'e883ade2-e6e3-4d6d-adf7-f92ceff5fdcb';
-const CLIENT_ID_CLI = 'e93fe488-5778-4c35-a6fc-0f54ed7b3139';
-const OPENAPI_BASE = 'https://openapi.qoder.sh';
-const WEB_BASE = 'https://qoder.com';
-const CLI_VERSION = '0.2.11';
-const CLIENT_TYPE = '6';
-const MACHINE_OS = 'arm64_darwin';
+function show(id){document.getElementById(id).style.display='block'}
+function hide(id){document.getElementById(id).style.display='none'}
+function showStatus(msg,cls){const b=document.getElementById('status-box');b.className='status-box '+cls;b.style.display='block';b.innerHTML=msg;}
+function logStep(t,c){document.getElementById('step-log').innerHTML+='<div class="'+(c||'')+'">'+t+'</div>';}
 
-function show(id){document.getElementById(id).classList.remove('hidden')}
-function hide(id){document.getElementById(id).classList.add('hidden')}
-function showStatus(msg,cls){
-const b=document.getElementById('status-box');
-b.className='status-box '+cls;b.style.display='block';b.innerHTML=msg;
-}
-function logStep(text,cls){
-const l=document.getElementById('step-log');
-l.innerHTML+='<div class="'+cls+'">'+text+'</div>';
-}
-
-// Generate PKCE verifier + challenge (S256)
 async function generatePKCE(){
 const chars='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
 const length=43+Math.floor(86*Math.random());
-let verifier='';
-const randomValues=new Uint8Array(length);
-crypto.getRandomValues(randomValues);
-for(let i=0;i<length;i++)verifier+=chars[randomValues[i]%chars.length];
-const encoder=new TextEncoder();
-const data=encoder.encode(verifier);
-const hash=await crypto.subtle.digest('SHA-256',data);
-const challenge=btoa(String.fromCharCode(...new Uint8Array(hash)))
-.replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-return{verifier,challenge};
+let v='';const r=new Uint8Array(length);crypto.getRandomValues(r);
+for(let i=0;i<length;i++)v+=chars[r[i]%chars.length];
+const d=new TextEncoder().encode(v);
+const h=await crypto.subtle.digest('SHA-256',d);
+return{verifier:v,challenge:btoa(String.fromCharCode(...new Uint8Array(h))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')};
 }
 
 async function startLogin(){
@@ -131,25 +105,14 @@ const pkce=await generatePKCE();
 const nonce=crypto.randomUUID();
 const machineId=crypto.randomUUID();
 pkceState={verifier:pkce.verifier,challenge:pkce.challenge,nonce,machineId};
-
 const loginUrl=`${WEB_BASE}/device/selectAccounts?challenge=${pkce.challenge}&challenge_method=S256&nonce=${nonce}&machine_id=${machineId}&client_id=${CLIENT_ID_IDE}`;
-
-// Auto-open login URL in new tab
 window.open(loginUrl,'_blank');
-
-// Show the link as backup
 const link=document.getElementById('login-link');
 link.href=loginUrl;
 document.getElementById('login-link-box').style.display='block';
-
 hide('step1');show('step2');
-
-// Auto-start polling immediately
 setTimeout(()=>pollForToken(),500);
-}catch(e){
-alert('Error: '+e.message);
-btn.disabled=false;btn.textContent='Start Device Login';
-}
+}catch(e){alert('Error: '+e.message);btn.disabled=false;btn.textContent='Start Device Login';}
 }
 
 async function proxy(url,method,headers,body){
@@ -162,26 +125,12 @@ return resp.json();
 }
 
 async function pollForToken(){
-const btn=document.getElementById('poll-btn');
-btn.disabled=true;btn.textContent='Polling for token...';
-hide('step2');show('step3');
-
-// Auto-poll immediately - no need to click "I've Authorized"
 logStep('Polling for auth token...','');
 const{verifier,nonce}=pkceState;
 const params=new URLSearchParams({nonce,verifier,challenge_method:'S256'});
 const pollUrl=`${OPENAPI_BASE}/api/v1/deviceToken/poll?${params}`;
-const headers={
-'Accept':'application/json',
-'Cosy-Version':CLI_VERSION,
-'Cosy-ClientType':CLIENT_TYPE,
-'Cosy-MachineOS':MACHINE_OS
-};
-
-// Poll for up to 5 min, interval 1.5s
-const maxTime=Date.now()+300000;
-let attempts=0;
-
+const headers={'Accept':'application/json','Cosy-Version':CLI_VERSION,'Cosy-ClientType':CLIENT_TYPE,'Cosy-MachineOS':MACHINE_OS};
+const maxTime=Date.now()+300000;let attempts=0;
 while(Date.now()<maxTime){
 attempts++;
 showStatus(`<span class="spinner"></span>Waiting for authorization... (${attempts})`,'status-loading');
@@ -189,96 +138,272 @@ const data=await proxy(pollUrl,'GET',headers);
 if(data.status===200){
 const body=JSON.parse(data.body);
 const token=body.token||body.device_token||body.access_token;
-if(token){
-logStep(`Token received (attempt ${attempts})`,'step-ok');
-pkceState.token=token;
-await injectTrial();return;
-}
+if(token){logStep(`Token received (attempt ${attempts})`,'step-ok');pkceState.token=token;await injectTrial();return;}
 }
 if(data.status===400||data.status===403){
-let m='Unknown';
-try{m=JSON.parse(data.body).errorMessage||data.body;}catch{m=data.body;}
+let m='Unknown';try{m=JSON.parse(data.body).errorMessage||data.body;}catch{m=data.body;}
 logStep(`Poll error: ${data.status} ${m}`,'step-fail');
-showStatus('❌ Authorization failed: '+m,'status-fail');
-btn.disabled=false;btn.textContent='Continue';return;
+showStatus('❌ Authorization failed: '+m,'status-fail');return;
 }
 await new Promise(r=>setTimeout(r,1500));
 }
-logStep('Poll timed out after 5 minutes','step-fail');
-showStatus('❌ Timed out — please try again and authorize faster','status-fail');
-btn.disabled=false;btn.textContent='Continue';
+showStatus('❌ Timed out — please try again','status-fail');
 }
 
+// ===== WASM Auth =====
+let wasmExports=null;
+let wasmMemory=null;
+const objs=[null];let nextSlot=1;
+function pushObj(v){if(v===undefined)return 0;const s=nextSlot;objs[s]=v;nextSlot++;return s;}
+function getObj(s){return objs[s];}
+function dropObj(s){objs[s]=null;}
+const encoder=new TextEncoder();
+const decoder=new TextDecoder('utf-8',{ignoreBOM:true,fatal:true});
+function decodeStr(ptr,len){return decoder.decode(new Uint8Array(wasmMemory.buffer,ptr>>>0,len>>>0));}
+
+const wasmImports={
+'./qoder_auth_wasm_bg.js':{
+__wbg_Error_2e59b1b37a9a34c3:function(ptr,len){return pushObj(Error(decodeStr(ptr,len)));},
+__wbg___wbindgen_is_function_49868bde5eb1e745:function(s){return typeof getObj(s)==="function"?1:0;},
+__wbg___wbindgen_is_object_40c5a80572e8f9d3:function(s){const v=getObj(s);return typeof v==="object"&&v!==null?1:0;},
+__wbg___wbindgen_is_string_b29b5c5a8065ba1a:function(s){return typeof getObj(s)==="string"?1:0;},
+__wbg___wbindgen_is_undefined_c0cca72b82b86f4d:function(s){return getObj(s)===undefined?1:0;},
+__wbg___wbindgen_throw_81fc77679af83bc6:function(ptr,len){throw new Error(decodeStr(ptr,len));},
+__wbg_call_d578befcc3145dee:function(){const a=arguments;try{return pushObj(getObj(a[0]).call(getObj(a[1]),getObj(a[2])));}catch(e){return pushObj(e);}},
+__wbg_crypto_38df2bab126b63dc:function(s){return pushObj(getObj(s).crypto);},
+__wbg_getRandomValues_c44a50d8cfdaebeb:function(){const a=arguments;try{getObj(a[0]).getRandomValues(getObj(a[1]));}catch(e){return pushObj(e);}},
+__wbg_getRandomValues_d49329ff89a07af1:function(ptr,len){try{const arr=new Uint8Array(wasmMemory.buffer,ptr>>>0,len>>>0);crypto.getRandomValues(arr);}catch(e){return pushObj(e);}},
+__wbg_length_0c32cb8543c8e4c8:function(s){return getObj(s).length;},
+__wbg_msCrypto_bd5a034af96bcba6:function(s){return 0;},
+__wbg_new_99cabae501c0a8a0:function(){return pushObj(new Map());},
+__wbg_new_with_length_9cedd08484b73942:function(len){return pushObj(new Uint8Array(len>>>0));},
+__wbg_node_84ea875411254db1:function(s){return 0;},
+__wbg_now_88621c9c9a4f3ffc:function(){return Date.now();},
+__wbg_process_44c7a14e11e9f69e:function(s){return 0;},
+__wbg_prototypesetcall_3e05eb9545565046:function(ptr,len,val){Uint8Array.prototype.set.call(new Uint8Array(wasmMemory.buffer,ptr>>>0,len>>>0),getObj(val));},
+__wbg_randomFillSync_6c25eac9869eb53e:function(){return 0;},
+__wbg_require_b4edbdcf3e2a1ef0:function(){return 0;},
+__wbg_set_08463b1df38a7e29:function(m,k,v){return pushObj(getObj(m).set(getObj(k),getObj(v)));},
+__wbg_static_accessor_GLOBAL_THIS_a1248013d790bf5f:function(){return pushObj(globalThis);},
+__wbg_static_accessor_GLOBAL_f2e0f995a21329ff:function(){return 0;},
+__wbg_static_accessor_SELF_24f78b6d23f286ea:function(){return 0;},
+__wbg_static_accessor_WINDOW_59fd959c540fe405:function(){return pushObj(window);},
+__wbg_subarray_0f98d3fb634508ad:function(s,start,end){return pushObj(getObj(s).subarray(start>>>0,end>>>0));},
+__wbg_versions_276b2795b1c6a219:function(s){return 0;},
+__wbindgen_cast_0000000000000001:function(ptr,len){return pushObj(new Uint8Array(wasmMemory.buffer,ptr>>>0,len>>>0));},
+__wbindgen_cast_0000000000000002:function(ptr,len){return pushObj(decodeStr(ptr,len));},
+__wbindgen_object_clone_ref:function(s){return pushObj(getObj(s));},
+__wbindgen_object_drop_ref:function(s){dropObj(s);},
+}
+};
+
+async function loadWasm(){
+if(wasmExports)return wasmExports;
+showStatus('<span class="spinner"></span>Loading WASM module...','status-loading');
+const resp=await fetch('/qoder_auth.wasm');
+const buf=await resp.arrayBuffer();
+const{instance}=await WebAssembly.instantiate(buf,wasmImports);
+wasmExports=instance.exports;
+wasmMemory=wasmExports.memory;
+logStep('WASM module loaded','step-ok');
+logStep('WASM exports: '+Object.keys(wasmExports).filter(k=>typeof wasmExports[k]==='function').join(', '),'');
+return wasmExports;
+}
+
+// Generate encrypt_user_info + key using WASM
+function generateRuntimeFields(userInfoJson){
+const e=wasmExports;
+// allocFn = e.__wbindgen_export2 (alloc), reallocFn = e.__wbindgen_export3 (realloc)
+const allocFn=e.__wbindgen_export0;
+const reallocFn=e.__wbindgen_export1;
+
+function passString(s){
+const buf=encoder.encode(s);
+const ptr=allocFn(buf.length,1)>>>0;
+new Uint8Array(wasmMemory.buffer).set(buf,ptr);
+return[ptr,buf.length];
+}
+
+const[ptr,len]=passString(userInfoJson);
+const stackPtr=e.__wbindgen_add_to_stack_pointer(-16);
+try{
+e.generate_runtime_auth_fields(ptr,len);
+const resultPtr=e.__wbindgen_add_to_stack_pointer(0); // read return
+// Read the result: [string ptr, string len]
+const dv=new DataView(wasmMemory.buffer);
+const outPtr=dv.getInt32(stackPtr,true);
+const outLen=dv.getInt32(stackPtr+4,true);
+const resultJson=decodeStr(outPtr,outLen);
+e.__wbindgen_export4(outPtr,outLen,1); // free the string
+return JSON.parse(resultJson);
+}finally{
+e.__wbindgen_add_to_stack_pointer(16);
+}
+}
+
+// Create QoderContext and prepare a signed request
+function prepareRequest(endpoint,path,method,authMode,body,headers){
+const e=wasmExports;
+const allocFn=e.__wbindgen_export0;
+const reallocFn=e.__wbindgen_export1;
+
+function passString(s){
+const buf=encoder.encode(s);
+const ptr=allocFn(buf.length,1)>>>0;
+new Uint8Array(wasmMemory.buffer).set(buf,ptr);
+return[ptr,buf.length];
+}
+
+const[epPtr,epLen]=passString(endpoint);
+const[pathPtr,pathLen]=passString(path);
+const[methodPtr,methodLen]=passString(method);
+const[authPtr,authLen]=passString(authMode);
+let bodyPtr=0,bodyLen=0;
+if(body){const[bPtr,bLen]=passString(body);bodyPtr=bPtr;bodyLen=bLen;}
+let headersPtr=0,headersLen=0;
+if(headers){const[hPtr,hLen]=passString(headers);headersPtr=hPtr;headersLen=hLen;}
+
+const stackPtr=e.__wbindgen_add_to_stack_pointer(-16);
+try{
+// qsA.prepareRequest(epPtr,epLen,pathPtr,pathLen,methodPtr,methodLen,authPtr,authLen,bodyPtr,bodyLen,headersPtr,headersLen)
+// But we need the QoderContext instance first...
+// This is complex - the context needs to be created first via XsA/m8n
+// For now, just try generateRuntimeFields which is simpler
+return null;
+}finally{
+e.__wbindgen_add_to_stack_pointer(16);
+}
+}
+
+// ===== Trial Injection =====
 async function injectTrial(){
+hide('step2');show('step3');
 const token=pkceState.token;
+
+// Step 1: Load WASM
+try{
+await loadWasm();
+}catch(e){
+logStep('WASM load failed: '+e.message,'step-fail');
+// Continue without WASM
+logStep('Continuing without WASM signing...','step-skip');
+}
+
+// Step 2: Get userinfo
+showStatus('<span class="spinner"></span>Reading user info...','status-loading');
 const authHeaders={
+'Accept':'application/json','User-Agent':'qoder/'+CLI_VERSION,
+'Authorization':'Bearer '+token,'Cosy-Version':CLI_VERSION,
+'Cosy-ClientType':CLIENT_TYPE,'Cosy-MachineOS':MACHINE_OS,
+'Cosy-MachineId':pkceState.machineId,'Cosy-MachineToken':pkceState.machineId
+};
+const uiData=await proxy(`${OPENAPI_BASE}/api/v1/userinfo`,'GET',authHeaders);
+const uiBody=uiData.status===200?JSON.parse(uiData.body):{};
+logStep(`GET /api/v1/userinfo → ${uiData.status}: ${uiBody.name||uiBody.email||'?'}`,'step-ok');
+
+// Step 3: Generate runtime auth fields (encrypt_user_info + key) via WASM
+let encryptUserInfo='';let key='';
+if(wasmExports){
+try{
+const userInfoJson=JSON.stringify({
+uid:uiBody.uid||uiBody.id||'',
+organization_id:uiBody.organization_id||'',
+organization_tags:uiBody.organization_tags||[],
+data_policy_agreed:true
+});
+showStatus('<span class="spinner"></span>Generating WASM auth fields...','status-loading');
+const fields=generateRuntimeFields(userInfoJson);
+encryptUserInfo=fields.encrypt_user_info||'';
+key=fields.key||'';
+logStep('WASM generate_runtime_auth_fields: encrypt_user_info='+encryptUserInfo.substring(0,20)+'... key='+key.substring(0,20)+'...','step-ok');
+}catch(e){
+logStep('WASM generateRuntimeFields failed: '+e.message,'step-fail');
+}
+}
+
+// Step 4: POST updateDataPolicy to center.qoder.sh (WASM-signed)
+// This is the endpoint that might trigger trial!
+showStatus('<span class="spinner"></span>Triggering trial (center.qoder.sh)...','status-loading');
+const requestId=crypto.randomUUID();
+const lingmaVersion=CLI_VERSION;
+const updateTimestamp=Date.now();
+const policyPayload=JSON.stringify({
+payload:JSON.stringify({
+uid:uiBody.uid||uiBody.id||'',
+aid:'',
+status:'AGREE',
+UpdateTimestamp:updateTimestamp,
+LingmaVersion:lingmaVersion,
+requestId:requestId
+}),
+encodeVersion:'1'
+});
+
+// Build headers for center endpoint (with WASM auth fields)
+const centerHeaders={
 'Accept':'application/json',
-'User-Agent':'qoder/'+CLI_VERSION,
+'Content-Type':'application/json',
 'Authorization':'Bearer '+token,
 'Cosy-Version':CLI_VERSION,
 'Cosy-ClientType':CLIENT_TYPE,
-'Cosy-MachineOS':MACHINE_OS
+'Cosy-MachineOS':MACHINE_OS,
+'Cosy-MachineId':pkceState.machineId,
+'Cosy-MachineToken':pkceState.machineId,
 };
+if(encryptUserInfo)centerHeaders['Cosy-EncryptUserInfo']=encryptUserInfo;
+if(key)centerHeaders['Cosy-Key']=key;
 
-// Step 1: userinfo
-showStatus('<span class="spinner"></span>Step 1/3: Reading user info...','status-loading');
-logStep('GET /api/v1/userinfo...','');
-const uiData=await proxy(`${OPENAPI_BASE}/api/v1/userinfo`,'GET',authHeaders);
-const uiBody=uiData.status===200?JSON.parse(uiData.body):{};
-logStep(`  → ${uiData.status}: ${(uiBody.name||uiBody.username||uiBody.email||'?')}`,'step-ok');
+const policyUrl=`${CENTER_BASE}/api/v2/config/updateDataPolicy?requestId=${requestId}&version=2`;
+logStep(`POST center.qoder.sh/api/v2/config/updateDataPolicy...`,'');
+const policyData=await proxy(policyUrl,'POST',centerHeaders,policyPayload);
+logStep(`  → ${policyData.status}: ${policyData.body.substring(0,100)}`,policyData.status===200?'step-ok':'step-skip');
 
-// Step 2: user/status — TRIGGER TRIAL (machineToken = machineId fallback, same as CLI)
-showStatus('<span class="spinner"></span>Step 2/3: Triggering trial...','status-loading');
-logStep('GET /api/v3/user/status (trigger trial)...','');
-// CLI fallback: n?.machineToken || i (machineId UUID)
-const statusHeaders={...authHeaders,'Cosy-MachineId':pkceState.machineId,'Cosy-MachineToken':pkceState.machineId};
-const stData=await proxy(`${OPENAPI_BASE}/api/v3/user/status`,'GET',statusHeaders);
-const stBody=stData.status===200?JSON.parse(stData.body):{};
-logStep(`  → ${stData.status}: ${JSON.stringify(stBody).substring(0,100)}`,stData.status===200?'step-ok':'step-skip');
+// Step 5: Also call /api/v3/user/status (sends machineToken)
+logStep('GET /api/v3/user/status...','');
+const stData=await proxy(`${OPENAPI_BASE}/api/v3/user/status`,'GET',authHeaders);
+logStep(`  → ${stData.status}: ${stData.body.substring(0,100)}`,stData.status===200?'step-ok':'step-skip');
 
-// Step 3: check plan + credits
-showStatus('<span class="spinner"></span>Step 3/3: Verifying trial...','status-loading');
-logStep('GET /api/v2/user/plan...','');
+// Step 6: Verify plan + credits
+showStatus('<span class="spinner"></span>Verifying trial...','status-loading');
 const planData=await proxy(`${OPENAPI_BASE}/api/v2/user/plan`,'GET',authHeaders);
 const planBody=planData.status===200?JSON.parse(planData.body):{};
-logStep(`  → ${planData.status}: ${JSON.stringify(planBody).substring(0,100)}`,planData.status===200?'step-ok':'step-skip');
+logStep(`GET /api/v2/user/plan → ${planData.status}: ${JSON.stringify(planBody).substring(0,80)}`,planData.status===200?'step-ok':'step-skip');
 
-logStep('GET /api/v2/quota/usage...','');
 const quotaData=await proxy(`${OPENAPI_BASE}/api/v2/quota/usage`,'GET',authHeaders);
 const quotaBody=quotaData.status===200?JSON.parse(quotaData.body):{};
-logStep(`  → ${quotaData.status}: ${JSON.stringify(quotaBody).substring(0,100)}`,quotaData.status===200?'step-ok':'step-skip');
+logStep(`GET /api/v2/quota/usage → ${quotaData.status}: ${JSON.stringify(quotaBody).substring(0,80)}`,quotaData.status===200?'step-ok':'step-skip');
 
 // Raw output
 const raw=document.getElementById('raw-out');
 raw.style.display='block';
-raw.textContent='userinfo: '+JSON.stringify(uiBody,null,2).substring(0,300)+'\n\nstatus: '+JSON.stringify(stBody,null,2).substring(0,300)+'\n\nplan: '+JSON.stringify(planBody,null,2).substring(0,300)+'\n\nquota: '+JSON.stringify(quotaBody,null,2).substring(0,300);
+raw.textContent='userinfo: '+JSON.stringify(uiBody,null,2).substring(0,300)+
+'\n\npolicy: '+policyData.body.substring(0,300)+
+'\n\nplan: '+JSON.stringify(planBody,null,2).substring(0,300)+
+'\n\nquota: '+JSON.stringify(quotaBody,null,2).substring(0,300);
 
 // Result
 const card=document.getElementById('main-card');
-const isPro=planBody.plan==='pro'||planBody.plan==='trial'||planBody.plan_type==='trial'||planBody.user_type==='pro'||planBody.user_type==='trial';
-const hasCredits=quotaBody.total>0||quotaBody.remaining>0||quotaBody.credits>0;
+const hasCredits=quotaBody.userQuota?.total>0||quotaBody.total>0;
+const isPro=planBody.plan==='pro'||planBody.plan_type==='trial'||planBody.user_type==='trial'||planBody.user_type==='pro';
 
 if(isPro||hasCredits){
-card.classList.add('result-ok');card.classList.remove('result-fail');
+card.className='result-ok';
 let h='<table>';
-h+='<tr><td>User</td><td>'+(uiBody.name||uiBody.username||'?')+'</td></tr>';
-h+='<tr><td>Email</td><td>'+(uiBody.email||'?')+'</td></tr>';
+h+='<tr><td>User</td><td>'+(uiBody.name||'?')+'</td></tr>';
 h+='<tr><td>Plan</td><td><strong>'+(planBody.plan||planBody.plan_type||'?')+'</strong></td></tr>';
-h+='<tr><td>Type</td><td>'+(planBody.user_type||planBody.userType||'?')+'</td></tr>';
-h+='<tr><td>Credits</td><td>'+JSON.stringify(quotaBody)+'</td></tr>';
+h+='<tr><td>Credits</td><td>'+(quotaBody.userQuota?.total||quotaBody.total||0)+'</td></tr>';
 h+='</table>';
 showStatus('✅ Inject SUCCESS — Trial Activated!'+h,'status-ok');
 }else{
-card.classList.add('result-fail');card.classList.remove('result-ok');
-let reason='Trial not granted. Possible: account already used trial, or server requires MachineToken.';
+card.className='result-fail';
 let h='<table>';
-h+='<tr><td>User</td><td>'+(uiBody.name||uiBody.username||'?')+'</td></tr>';
+h+='<tr><td>User</td><td>'+(uiBody.name||'?')+'</td></tr>';
 h+='<tr><td>Plan</td><td>'+(planBody.plan||planBody.plan_type||'?')+'</td></tr>';
 h+='<tr><td>Type</td><td>'+(planBody.user_type||planBody.userType||'?')+'</td></tr>';
-h+='<tr><td>Credits</td><td>'+JSON.stringify(quotaBody)+'</td></tr>';
-h+='<tr><td>Reason</td><td>'+reason+'</td></tr>';
+h+='<tr><td>Credits</td><td>'+JSON.stringify(quotaBody).substring(0,100)+'</td></tr>';
+h+='<tr><td>Policy</td><td>'+policyData.status+': '+policyData.body.substring(0,80)+'</td></tr>';
 h+='</table>';
-showStatus('❌ Inject FAILED — '+reason+h,'status-fail');
+showStatus('❌ Inject FAILED — Trial not granted'+h,'status-fail');
 }
 }
 </script>
