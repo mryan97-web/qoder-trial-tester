@@ -10,9 +10,8 @@ body{background:#0d1117;color:#c9d1d9;font-family:-apple-system,system-ui,sans-s
 h1{color:#58a6ff;margin-bottom:4px;font-size:1.4em;text-align:center}
 .sub{color:#8b949e;margin-bottom:16px;font-size:.8em;text-align:center}
 .card{background:#161b22;border:1px solid #30363d;border-radius:10px;padding:20px;margin-bottom:12px}
-input,button,select,textarea{background:#0d1117;border:1px solid #30363d;color:#c9d1d9;padding:10px 14px;border-radius:8px;font-family:inherit;font-size:14px;width:100%}
-input:focus,textarea:focus{border-color:#58a6ff;outline:none}
-textarea{resize:vertical;min-height:60px;font-family:monospace;font-size:12px}
+input,button,select{background:#0d1117;border:1px solid #30363d;color:#c9d1d9;padding:10px 14px;border-radius:8px;font-family:inherit;font-size:14px;width:100%}
+input:focus{border-color:#58a6ff;outline:none}
 button{background:#238636;color:#fff;border:none;cursor:pointer;padding:12px 20px;font-weight:bold;font-size:15px;border-radius:8px;margin-top:10px;transition:.2s}
 button:hover{background:#2ea043}
 button:disabled{background:#21262d;color:#484f58;cursor:not-allowed}
@@ -34,27 +33,22 @@ details{margin-top:8px}
 summary{cursor:pointer;color:#8b949e;font-size:.8em}
 .hint{color:#8b949e;font-size:.72em;margin-top:4px;line-height:1.4}
 .code{background:#010409;padding:2px 6px;border-radius:4px;font-family:monospace;font-size:.85em;color:#79c0ff}
+.step-log{text-align:left;font-size:.8em;color:#8b949e;margin-top:6px;line-height:1.6}
+.step-ok{color:#3fb950}
+.step-fail{color:#f85149}
+.step-skip{color:#d29922}
 </style>
 </head>
 <body>
 <h1>Qoder Trial Injector</h1>
-<p class="sub">Trigger Pro Trial + 300 Credits without installing Qoder IDE. Paste PAT + machineToken from your real PC.</p>
+<p class="sub">Zero install. Paste PAT → auto-inject trial. No CLI, no IDE, no download.</p>
 
 <div class="card" id="main-card">
-<label>1. Personal Access Token (PAT)</label>
+<label>Personal Access Token (PAT)</label>
 <input type="password" id="pat-input" placeholder="Paste your Qoder PAT here..." autocomplete="off">
 <p class="hint">Get it from: qoder.com → Settings → Developer → Personal Access Tokens</p>
 
-<label style="margin-top:12px">2. Machine Token (from your real PC, non-VM)</label>
-<textarea id="mt-input" placeholder="Paste machineToken here (from running Qoder CLI on your PC)..."></textarea>
-<p class="hint">
-Run this ONE command on your PC (Windows/Mac/Linux):<br>
-<span class="code">npm i -g @qoder-ai/qodercli && qoder login</span><br>
-Then copy the machineToken from: <span class="code">~/.qoder/umid.json</span> or Qoder logs.
-<br>⚠️ Must be a REAL PC, NOT a VM/VPS. VM = trial blocked.
-</p>
-
-<label style="margin-top:12px">3. Client Type</label>
+<label style="margin-top:12px">Client Type (simulated)</label>
 <select id="client-mode">
 <option value="ide">Qoder IDE (type=6, v0.2.11) — recommended</option>
 <option value="cli">Qoder CLI (type=5, v1.1.26)</option>
@@ -62,20 +56,22 @@ Then copy the machineToken from: <span class="code">~/.qoder/umid.json</span> or
 </select>
 
 <button onclick="inject()" id="inject-btn">Inject Trial</button>
+
 <div class="status-box" id="status-box"></div>
+<div class="step-log" id="step-log"></div>
 <pre id="raw-out" style="display:none"></pre>
 </div>
 
 <details>
-<summary>How it works (technical)</summary>
+<summary>How it works</summary>
 <table style="margin-top:8px">
-<tr><td>Step 1</td><td>POST <code>/api/v1/jobToken/exchange</code> — exchange PAT → auth token</td></tr>
+<tr><td>Step 1</td><td>POST <code>/api/v1/jobToken/exchange</code> — PAT → auth token</td></tr>
 <tr><td>Step 2</td><td>GET <code>/api/v1/userinfo</code> — read user profile</td></tr>
-<tr><td>Step 3</td><td>GET <code>/api/v3/user/status</code> — <strong>send machineToken → trigger trial grant</strong></td></tr>
-<tr><td>Step 4</td><td>GET <code>/api/v2/user/plan</code> — check if trial activated</td></tr>
-<tr><td>Step 5</td><td>GET <code>/api/v2/quota/usage</code> — check if 300 credits granted</td></tr>
-<tr><td>API Base</td><td><code>openapi.qoder.sh</code></td></tr>
-<tr><td>Trial rules</td><td>First sign-in only · Non-VM only · 1 account per user</td></tr>
+<tr><td>Step 3</td><td>GET <code>/api/v3/user/status</code> — trigger trial grant (client sign-in signal)</td></tr>
+<tr><td>Step 4</td><td>GET <code>/api/v2/user/plan</code> — verify trial = active</td></tr>
+<tr><td>Step 5</td><td>GET <code>/api/v2/quota/usage</code> — verify 300 credits</td></tr>
+<tr><td>VM bypass</td><td>Request from CF edge IP (not VM). No MachineToken sent.</td></tr>
+<tr><td>Trial rules</td><td>First sign-in only · Non-VM · 1 account per user</td></tr>
 </table>
 </details>
 
@@ -92,58 +88,72 @@ b.className='status-box '+cls;
 b.style.display='block';
 b.innerHTML=msg;
 }
+function logStep(text,cls){
+const l=document.getElementById('step-log');
+l.innerHTML+='<div class="'+cls+'">'+text+'</div>';
+}
+function clearLog(){
+document.getElementById('step-log').innerHTML='';
+document.getElementById('raw-out').style.display='none';
+document.getElementById('raw-out').textContent='';
+document.getElementById('status-box').style.display='none';
+}
+
+async function proxy(url,method,headers,body){
+const resp=await fetch('/api/proxy',{
+method:'POST',
+headers:{'Content-Type':'application/json'},
+body:JSON.stringify({url,method,headers,body:body||null})
+});
+return resp.json();
+}
 
 async function inject(){
 const pat=document.getElementById('pat-input').value.trim();
-const mt=document.getElementById('mt-input').value.trim();
 if(!pat){alert('Paste your PAT first');return;}
-if(!mt){alert('Paste your machineToken from your real PC');return;}
 const mode=document.getElementById('client-mode').value;
 const c=CLIENT_MAP[mode];
 const btn=document.getElementById('inject-btn');
 btn.disabled=true;btn.textContent='Injecting...';
-const raw=document.getElementById('raw-out');
-raw.style.display='none';raw.textContent='';
+clearLog();
 
 const baseHeaders={
 'Accept':'application/json',
 'User-Agent':'qoder/'+c.version,
 'Cosy-Version':c.version,
 'Cosy-ClientType':c.type,
-'Cosy-MachineOS':c.os,
-'Content-Type':'application/json'
+'Cosy-MachineOS':c.os
 };
 
 try{
-// === Step 1: Exchange PAT → auth token ===
-showStatus('<span class="spinner"></span>Step 1/5: Exchanging PAT...','status-loading');
-const exResp=await fetch('/api/proxy',{
-method:'POST',
-headers:{'Content-Type':'application/json'},
-body:JSON.stringify({
-url:'https://openapi.qoder.sh/api/v1/jobToken/exchange',
-method:'POST',
-headers:{...baseHeaders,'Content-Type':'application/json'},
-body:JSON.stringify({personal_token:pat})
-})
-});
-const exData=await exResp.json();
+// === Step 1: Exchange PAT ===
+showStatus('<span class="spinner"></span>Exchanging PAT...','status-loading');
+logStep('Step 1/5: POST /api/v1/jobToken/exchange...','');
+
+const exData=await proxy(
+'https://openapi.qoder.sh/api/v1/jobToken/exchange',
+'POST',
+{...baseHeaders,'Content-Type':'application/json'},
+JSON.stringify({personal_token:pat})
+);
+
 if(exData.status!==200){
-let m='Unknown';
-try{const e=JSON.parse(exData.body);m=e.errorMessage||e.message||e.error||JSON.stringify(e);}catch{m=exData.body;}
-showStatus('❌ Failed at step 1 (exchange): '+m,'status-fail');
+let m=exData.body||'Unknown';
+try{m=JSON.parse(m).errorMessage||m;}catch{}
+logStep('  → FAIL: '+exData.status+' '+m,'step-fail');
+showStatus('❌ Failed: PAT exchange failed ('+exData.status+')','status-fail');
 btn.disabled=false;btn.textContent='Inject Trial';return;
 }
+
 const exBody=JSON.parse(exData.body);
 const authToken=exBody.token||exBody.device_token||exBody.access_token;
 if(!authToken){
-showStatus('❌ Failed: No token in exchange response','status-fail');
+logStep('  → FAIL: No token in response','step-fail');
+showStatus('❌ Failed: No auth token returned','status-fail');
 btn.disabled=false;btn.textContent='Inject Trial';return;
 }
-raw.textContent+='Step 1 (exchange): OK\n'+JSON.stringify(exBody,null,2).substring(0,500)+'\n\n';
+logStep('  → OK: auth token received','step-ok');
 
-// === Step 2: GET /api/v1/userinfo ===
-showStatus('<span class="spinner"></span>Step 2/5: Reading user info...','status-loading');
 const authHeaders={
 'Accept':'application/json',
 'User-Agent':'qoder/'+c.version,
@@ -152,124 +162,105 @@ const authHeaders={
 'Cosy-ClientType':c.type,
 'Cosy-MachineOS':c.os
 };
-const uiResp=await fetch('/api/proxy',{
-method:'POST',
-headers:{'Content-Type':'application/json'},
-body:JSON.stringify({
-url:'https://openapi.qoder.sh/api/v1/userinfo',
-method:'GET',
-headers:authHeaders
-})
-});
-const uiData=await uiResp.json();
+
+// === Step 2: userinfo ===
+showStatus('<span class="spinner"></span>Reading user info...','status-loading');
+logStep('Step 2/5: GET /api/v1/userinfo...','');
+
+const uiData=await proxy('https://openapi.qoder.sh/api/v1/userinfo','GET',authHeaders);
 const uiBody=uiData.status===200?JSON.parse(uiData.body):{};
-raw.textContent+='Step 2 (userinfo): '+uiData.status+'\n'+JSON.stringify(uiBody,null,2).substring(0,500)+'\n\n';
 
-// === Step 3: GET /api/v3/user/status — THIS IS THE TRIGGER ===
-// This endpoint sends Cosy-MachineToken → server checks VM → grants trial if non-VM + first sign-in
-showStatus('<span class="spinner"></span>Step 3/5: Sending machineToken to trigger trial...','status-loading');
-const statusHeaders={
-'Accept':'application/json',
-'Authorization':'Bearer '+authToken,
-'Cosy-MachineToken':mt,
-'Cosy-Version':c.version,
-'Cosy-ClientType':c.type,
-'Cosy-MachineOS':c.os
-};
-const stResp=await fetch('/api/proxy',{
-method:'POST',
-headers:{'Content-Type':'application/json'},
-body:JSON.stringify({
-url:'https://openapi.qoder.sh/api/v3/user/status',
-method:'GET',
-headers:statusHeaders
-})
-});
-const stData=await stResp.json();
+if(uiData.status===200){
+logStep('  → OK: '+(uiBody.name||uiBody.username||uiBody.email||'user found'),'step-ok');
+}else{
+logStep('  → '+uiData.status+' (non-fatal)','step-skip');
+}
+
+// === Step 3: user/status — TRIGGER TRIAL ===
+showStatus('<span class="spinner"></span>Triggering trial (client sign-in signal)...','status-loading');
+logStep('Step 3/5: GET /api/v3/user/status (trigger trial)...','');
+
+// No MachineToken — server receives client sign-in signal from Cosy-ClientType
+// Request comes from CF edge (not VM IP)
+const stData=await proxy('https://openapi.qoder.sh/api/v3/user/status','GET',authHeaders);
 const stBody=stData.status===200?JSON.parse(stData.body):{};
-raw.textContent+='Step 3 (user/status): '+stData.status+'\n'+JSON.stringify(stBody,null,2).substring(0,800)+'\n\n';
 
-// === Step 4: GET /api/v2/user/plan — check trial ===
-showStatus('<span class="spinner"></span>Step 4/5: Checking plan...','status-loading');
-const planResp=await fetch('/api/proxy',{
-method:'POST',
-headers:{'Content-Type':'application/json'},
-body:JSON.stringify({
-url:'https://openapi.qoder.sh/api/v2/user/plan',
-method:'GET',
-headers:authHeaders
-})
-});
-const planData=await planResp.json();
+if(stData.status===200){
+logStep('  → OK: status received','step-ok');
+}else{
+logStep('  → '+stData.status+' '+JSON.stringify(stBody).substring(0,80),'step-skip');
+}
+
+// === Step 4: check plan ===
+showStatus('<span class="spinner"></span>Checking plan...','status-loading');
+logStep('Step 4/5: GET /api/v2/user/plan...','');
+
+const planData=await proxy('https://openapi.qoder.sh/api/v2/user/plan','GET',authHeaders);
 const planBody=planData.status===200?JSON.parse(planData.body):{};
-raw.textContent+='Step 4 (plan): '+planData.status+'\n'+JSON.stringify(planBody,null,2).substring(0,500)+'\n\n';
 
-// === Step 5: GET /api/v2/quota/usage — check credits ===
-showStatus('<span class="spinner"></span>Step 5/5: Checking credits...','status-loading');
-const quotaResp=await fetch('/api/proxy',{
-method:'POST',
-headers:{'Content-Type':'application/json'},
-body:JSON.stringify({
-url:'https://openapi.qoder.sh/api/v2/quota/usage',
-method:'GET',
-headers:authHeaders
-})
-});
-const quotaData=await quotaResp.json();
+if(planData.status===200){
+const plan=planBody.plan||planBody.plan_type||'?';
+const type=planBody.user_type||planBody.userType||'?';
+logStep('  → plan='+plan+', type='+type,'step-ok');
+}else{
+logStep('  → '+planData.status,'step-skip');
+}
+
+// === Step 5: check credits ===
+showStatus('<span class="spinner"></span>Checking credits...','status-loading');
+logStep('Step 5/5: GET /api/v2/quota/usage...','');
+
+const quotaData=await proxy('https://openapi.qoder.sh/api/v2/quota/usage','GET',authHeaders);
 const quotaBody=quotaData.status===200?JSON.parse(quotaData.body):{};
-raw.textContent+='Step 5 (credits): '+quotaData.status+'\n'+JSON.stringify(quotaBody,null,2).substring(0,500)+'\n\n';
 
-// === Build result table ===
+if(quotaData.status===200){
+logStep('  → '+JSON.stringify(quotaBody).substring(0,100),'step-ok');
+}else{
+logStep('  → '+quotaData.status,'step-skip');
+}
+
+// === Raw output ===
+const raw=document.getElementById('raw-out');
 raw.style.display='block';
+raw.textContent='userinfo: '+JSON.stringify(uiBody,null,2).substring(0,400)+'\n\nstatus: '+JSON.stringify(stBody,null,2).substring(0,400)+'\n\nplan: '+JSON.stringify(planBody,null,2).substring(0,400)+'\n\nquota: '+JSON.stringify(quotaBody,null,2).substring(0,400);
 
+// === Result ===
 const card=document.getElementById('main-card');
-
-// Check if trial was actually granted
 const isPro=planBody.plan==='pro'||planBody.plan==='trial'||planBody.plan_type==='trial'||planBody.user_type==='pro'||planBody.user_type==='trial';
 const hasCredits=quotaBody.total>0||quotaBody.remaining>0||quotaBody.credits>0;
 
 if(isPro||hasCredits){
-card.classList.add('result-ok');
-card.classList.remove('result-fail');
-let detailHtml='<table>';
-detailHtml+='<tr><td>User</td><td>'+(uiBody.name||uiBody.username||'?')+'</td></tr>';
-detailHtml+='<tr><td>Email</td><td>'+(uiBody.email||'?')+'</td></tr>';
-if(planBody.plan)detailHtml+='<tr><td>Plan</td><td><strong>'+(planBody.plan||planBody.plan_type)+'</strong></td></tr>';
-if(planBody.user_type)detailHtml+='<tr><td>Type</td><td>'+(planBody.user_type||planBody.userType)+'</td></tr>';
-if(planBody.trial_end_date||planBody.trialEndDate)detailHtml+='<tr><td>Trial End</td><td>'+(planBody.trial_end_date||planBody.trialEndDate)+'</td></tr>';
-if(quotaBody.total)detailHtml+='<tr><td>Total Credits</td><td>'+quotaBody.total+'</td></tr>';
-if(quotaBody.remaining!==undefined)detailHtml+='<tr><td>Remaining</td><td>'+quotaBody.remaining+'</td></tr>';
-if(quotaBody.used)detailHtml+='<tr><td>Used</td><td>'+quotaBody.used+'</td></tr>';
-detailHtml+='<tr><td>Status (v3)</td><td>'+stData.status+' '+JSON.stringify(stBody).substring(0,80)+'</td></tr>';
-detailHtml+='</table>';
-showStatus('✅ Inject SUCCESS — Trial Activated!'+detailHtml,'status-ok');
-btn.textContent='Injected ✓';
-btn.style.background='#1f6feb';
+card.classList.add('result-ok');card.classList.remove('result-fail');
+let h='<table>';
+h+='<tr><td>User</td><td>'+(uiBody.name||uiBody.username||'?')+'</td></tr>';
+h+='<tr><td>Email</td><td>'+(uiBody.email||'?')+'</td></tr>';
+h+='<tr><td>Plan</td><td><strong>'+(planBody.plan||planBody.plan_type||'?')+'</strong></td></tr>';
+h+='<tr><td>Type</td><td>'+(planBody.user_type||planBody.userType||'?')+'</td></tr>';
+if(planBody.trial_end_date||planBody.trialEndDate)h+='<tr><td>Trial End</td><td>'+(planBody.trial_end_date||planBody.trialEndDate)+'</td></tr>';
+h+='<tr><td>Credits</td><td>'+JSON.stringify(quotaBody)+'</td></tr>';
+h+='</table>';
+showStatus('✅ Inject SUCCESS — Trial Activated!'+h,'status-ok');
+btn.textContent='Injected ✓';btn.style.background='#1f6feb';
 }else{
-card.classList.add('result-fail');
-card.classList.remove('result-ok');
+card.classList.add('result-fail');card.classList.remove('result-ok');
 let reason='';
-if(stData.status===200&&stBody.is_vm===true)reason='VM detected — server blocked trial. Use a real PC.';
-else if(stData.status===200&&stBody.trial_used)reason='Trial already used on another account.';
-else if(stData.status>=400)reason='Status check failed ('+stData.status+').';
-else reason='Trial not granted. Possible: already used, VM detected, or account not eligible.';
-let detailHtml='<table>';
-detailHtml+='<tr><td>User</td><td>'+(uiBody.name||uiBody.username||'?')+'</td></tr>';
-detailHtml+='<tr><td>Plan</td><td>'+(planBody.plan||planBody.plan_type||'?')+'</td></tr>';
-detailHtml+='<tr><td>Type</td><td>'+(planBody.user_type||planBody.userType||'?')+'</td></tr>';
-detailHtml+='<tr><td>Credits</td><td>'+(quotaBody.total||0)+'</td></tr>';
-detailHtml+='<tr><td>Status (v3)</td><td>'+stData.status+' '+JSON.stringify(stBody).substring(0,80)+'</td></tr>';
-detailHtml+='<tr><td>Reason</td><td>'+reason+'</td></tr>';
-detailHtml+='</table>';
-showStatus('❌ Inject FAILED — '+reason+detailHtml,'status-fail');
-btn.disabled=false;
-btn.textContent='Inject Trial';
-btn.style.background='#da3633';
+if(stBody.is_vm===true)reason='VM detected by server.';
+else if(stBody.trial_used||stBody.trial_already_used)reason='Trial already used.';
+else if(stData.status>=400)reason='Status endpoint failed ('+stData.status+').';
+else reason='Trial not granted. Account may be ineligible (already used, or server requires MachineToken).';
+let h='<table>';
+h+='<tr><td>User</td><td>'+(uiBody.name||uiBody.username||'?')+'</td></tr>';
+h+='<tr><td>Plan</td><td>'+(planBody.plan||planBody.plan_type||'?')+'</td></tr>';
+h+='<tr><td>Type</td><td>'+(planBody.user_type||planBody.userType||'?')+'</td></tr>';
+h+='<tr><td>Credits</td><td>'+JSON.stringify(quotaBody)+'</td></tr>';
+h+='<tr><td>Reason</td><td>'+reason+'</td></tr>';
+h+='</table>';
+showStatus('❌ Inject FAILED — '+reason+h,'status-fail');
+btn.disabled=false;btn.textContent='Inject Trial';btn.style.background='#da3633';
 }
 
 }catch(e){
 showStatus('❌ Error: '+e.message,'status-fail');
-const card=document.getElementById('main-card');
 card.classList.add('result-fail');
 btn.disabled=false;btn.textContent='Inject Trial';btn.style.background='#da3633';
 }
