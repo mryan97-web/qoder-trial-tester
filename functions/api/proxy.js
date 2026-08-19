@@ -1,5 +1,5 @@
-// Proxy endpoint — forwards requests to openapi.qoder.sh
-// Needed because browsers block cross-origin requests (CORS)
+// Proxy endpoint — forwards requests to Qoder API servers
+// Allows: openapi.qoder.sh + center.qoder.sh
 export async function onRequestPost(context) {
   const { request } = context;
   try {
@@ -9,17 +9,19 @@ export async function onRequestPost(context) {
     const headers = body.headers || {};
     const reqBody = body.body || null;
 
-    if (!url || !url.startsWith('https://openapi.qoder.sh/')) {
-      return new Response(JSON.stringify({ error: 'Invalid URL' }), {
+    const ALLOWED = [
+      'https://openapi.qoder.sh/',
+      'https://center.qoder.sh/',
+    ];
+
+    if (!url || !ALLOWED.some(prefix => url.startsWith(prefix))) {
+      return new Response(JSON.stringify({ error: 'Invalid URL: ' + url }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       });
     }
 
-    const fetchOpts = {
-      method,
-      headers,
-    };
+    const fetchOpts = { method, headers };
     if (reqBody && method !== 'GET') {
       fetchOpts.body = reqBody;
     }
