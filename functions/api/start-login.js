@@ -1,5 +1,5 @@
 // Generate PKCE pair and login URL for Qoder device login flow
-// No external dependencies — pure Web Crypto API
+// No machineToken needed — just generate a random machine_id
 
 function base64UrlEncode(buf) {
   const bytes = new Uint8Array(buf);
@@ -27,17 +27,10 @@ function uuidv4() {
 export async function onRequestPost(context) {
   const { request, env } = context;
   try {
-    const body = await request.json();
-    const machineToken = body.machineToken || '';
+    const body = await request.json().catch(() => ({}));
 
-    // Generate machine_id from machineToken (same pattern as CLI: UUID v5 from DNS namespace)
-    // We can't use uuidv5 easily, so use a simple hash-based approach
-    const machineIdHash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(machineToken));
-    const hashBytes = new Uint8Array(machineIdHash);
-    hashBytes[6] = (hashBytes[6] & 0x0f) | 0x50; // version 5
-    hashBytes[8] = (hashBytes[8] & 0x3f) | 0x80; // variant
-    const h = [...hashBytes].map(b => b.toString(16).padStart(2, '0'));
-    const machineId = `${h.slice(0,4).join('')}-${h.slice(4,6).join('')}-${h.slice(6,8).join('')}-${h.slice(8,10).join('')}-${h.slice(10,16).join('')}`;
+    // Generate a random machine_id — we don't need a real machineToken for login
+    const machineId = uuidv4();
 
     const { verifier, challenge } = await generatePKCE();
     const nonce = uuidv4();
@@ -46,18 +39,16 @@ export async function onRequestPost(context) {
     const CLI_CLIENT_ID = 'e883ade2-e6e3-4d6d-adf7-f92ceff5fdcb';
     const loginUrl = `https://qoder.com/device/selectAccounts?challenge=${challenge}&challenge_method=S256&nonce=${nonce}&machine_id=${machineId}&client_id=${CLI_CLIENT_ID}`;
 
-    // Store session in KV if available, otherwise return for client-side state
     const sessionData = {
       sessionId,
       verifier,
       challenge,
       nonce,
       machineId,
-      machineToken,
+      machineToken: body.machineToken || '',
       created: Date.now(),
     };
 
-    // Try to store in KV
     if (env.SESSION_KV) {
       await env.SESSION_KV.put(sessionId, JSON.stringify(sessionData), { expirationTtl: 300 });
     }

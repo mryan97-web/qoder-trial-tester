@@ -3,271 +3,179 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Qoder Trial Flow Tester</title>
+<title>Qoder Trial Activator</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#0d1117;color:#c9d1d9;font-family:'SF Mono',Monaco,Consolas,monospace;padding:20px;max-width:900px;margin:0 auto}
-h1{color:#58a6ff;margin-bottom:8px;font-size:1.4em}
-h2{color:#79c0ff;margin:16px 0 8px;font-size:1.1em}
-.sub{color:#8b949e;margin-bottom:12px;font-size:.85em}
-.card{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:16px;margin-bottom:12px}
+body{background:#0d1117;color:#c9d1d9;font-family:-apple-system,system-ui,sans-serif;padding:20px;max-width:700px;margin:0 auto}
+h1{color:#58a6ff;margin-bottom:4px;font-size:1.3em}
+h2{color:#79c0ff;margin:12px 0 6px;font-size:1em}
+.sub{color:#8b949e;margin-bottom:10px;font-size:.82em}
+.card{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:14px;margin-bottom:10px}
 input,button,select{background:#0d1117;border:1px solid #30363d;color:#c9d1d9;padding:8px 12px;border-radius:6px;font-family:inherit;font-size:13px}
-input{width:100%;margin-bottom:8px}
-button{background:#238636;color:#fff;border:none;cursor:pointer;padding:8px 16px;font-weight:bold;margin:4px 0}
+input{width:100%;margin-bottom:6px}
+button{background:#238636;color:#fff;border:none;cursor:pointer;padding:10px 20px;font-weight:bold;font-size:14px;border-radius:6px}
 button:hover{background:#2ea043}
 button:disabled{background:#21262d;color:#484f58;cursor:not-allowed}
-button.danger{background:#da3633}
-pre{background:#010409;border:1px solid #21262d;border-radius:6px;padding:10px;overflow-x:auto;font-size:11px;line-height:1.4;color:#7ee787;white-space:pre-wrap;word-break:break-all;max-height:400px;overflow-y:auto;margin-top:8px}
-.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:bold}
-.b-green{background:#2386363a;color:#3fb950;border:1px solid #3fb95040}
-.b-red{background:#da36333a;color:#f85149;border:1px solid #f8514940}
-.b-yellow{background:#d299223a;color:#d29922;border:1px solid #d2992240}
-.b-blue{background:#1f6feb3a;color:#58a6ff;border:1px solid #58a6ff40}
-.url-box{background:#010409;border:1px solid #30363d;border-radius:6px;padding:10px;word-break:break-all;font-size:12px;color:#58a6ff;margin:8px 0}
-.url-box a{color:#58a6ff;text-decoration:none}
-.url-box a:hover{text-decoration:underline}
-table{width:100%;border-collapse:collapse;font-size:.8em;margin-top:8px}
-td{padding:6px;border-bottom:1px solid #21262d}
-td:first-child{color:#79c0ff;width:35%}
-.spinner{display:inline-block;width:14px;height:14px;border:2px solid #30363d;border-top:2px solid #58a6ff;border-radius:50%;animation:spin 1s linear infinite}
+pre{background:#010409;border:1px solid #21262d;border-radius:6px;padding:10px;overflow-x:auto;font-size:11px;line-height:1.5;color:#7ee787;white-space:pre-wrap;word-break:break-all;max-height:500px;overflow-y:auto;margin-top:8px}
+.url-box{background:#010409;border:1px solid #30363d;border-radius:6px;padding:10px;word-break:break-all;font-size:12px;color:#58a6ff;margin:6px 0}
+.url-box a{color:#58a6ff}
+table{width:100%;border-collapse:collapse;font-size:.78em;margin-top:6px}
+td{padding:5px;border-bottom:1px solid #21262d}
+td:first-child{color:#79c0ff;width:40%}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid #30363d;border-top:2px solid #58a6ff;border-radius:50%;animation:spin 1s linear infinite;vertical-align:middle}
 @keyframes spin{to{transform:rotate(360deg)}}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-@media(max-width:768px){.grid2{grid-template-columns:1fr}}
-.log-entry{padding:4px 8px;border-radius:4px;margin:2px 0;font-size:11px}
-.log-entry.req{background:#161b2280}
-.log-entry.resp{background:#0d111780}
-.log-entry.error{background:#da363330;color:#f85149}
-.log-entry.success{background:#23863630;color:#3fb950}
-.tab{display:inline-block;padding:6px 14px;border:1px solid #30363d;border-radius:6px;cursor:pointer;margin-right:4px;font-size:12px}
-.tab.active{background:#238636;color:#fff;border-color:#238636}
-details{margin-top:8px}
-summary{cursor:pointer;color:#8b949e;font-size:.85em}
+.step-num{display:inline-block;width:22px;height:22px;background:#238636;color:#fff;border-radius:50%;text-align:center;line-height:22px;font-size:12px;font-weight:bold;margin-right:6px}
+.step-done{background:#1f6feb!important}
+.step-active{background:#d29922!important}
+.ok{color:#3fb950;font-weight:bold}
+.fail{color:#f85149;font-weight:bold}
+.wait{color:#d29922}
+label{font-size:.82em;color:#8b949e;display:block;margin:4px 0}
+details{margin-top:6px}
+summary{cursor:pointer;color:#8b949e;font-size:.82em}
 </style>
 </head>
 <body>
 <h1>Qoder Trial Activator</h1>
-<p class="sub">Trigger trial activation (300 credits + 14 day Pro) via raw API — no CLI install. Reverse-engineered from CLI v1.1.26.</p>
+<p class="sub">Get 300 credits + 14-day Pro without installing CLI. Reverse-engineered from CLI v1.1.26.</p>
 
-<!-- Step 1: Machine Fingerprint -->
-<div class="card">
-<h2>Step 1: Machine Fingerprint (UMID)</h2>
-<p class="sub">Generate machineToken + VM detection locally. Two options:</p>
-<div style="margin:8px 0">
-<span class="tab active" id="tab-umid-paste" onclick="switchTab('paste')">Paste Token</span>
-<span class="tab" id="tab-umid-download" onclick="switchTab('download')">Download Binary</span>
-</div>
-<div id="umid-paste">
-<input type="text" id="machine-token" placeholder="Paste machineToken here (from your PC)">
-<p class="sub" style="margin:4px 0">Or generate one by running runtime-info binary on your PC</p>
-</div>
-<div id="umid-download" style="display:none">
-<p style="margin:8px 0;color:#8b949e;font-size:12px">Download the UMID binary for your OS, run it, and paste the output:</p>
-</div>
-</div>
-
-<!-- Step 2: Initiate Login -->
-<div class="card">
-<h2>Step 2: Initiate PKCE Device Login</h2>
-<p class="sub">Generates PKCE verifier/challenge + nonce. Opens browser login URL. Sign in with Qoder account.</p>
-<button onclick="startLogin()" id="login-btn">Start Login Flow</button>
-<div id="login-url-area" style="display:none">
-<p style="margin:10px 0 4px;color:#8b949e;font-size:.8em">Open this URL in your browser and sign in:</p>
+<div class="card" id="card-login">
+<h2><span class="step-num" id="num1">1</span>Login with Qoder Account</h2>
+<p class="sub">Click the button → a Qoder login page opens. Sign in with your account. We auto-capture the auth token.</p>
+<button onclick="startLogin()" id="login-btn">Login</button>
+<div id="login-area" style="display:none;margin-top:10px">
 <div class="url-box" id="login-url"></div>
-<p style="margin:8px 0 4px;color:#8b949e;font-size:.8em">Polling for authorization... <span class="spinner" id="poll-spinner"></span></p>
-<pre id="poll-log" style="display:none;max-height:200px"></pre>
+<p class="sub" id="poll-status">Waiting for login... <span class="spinner"></span></p>
+<pre id="poll-log" style="display:none;max-height:120px"></pre>
 </div>
 </div>
 
-<!-- Step 3: Token Result -->
-<div class="card" id="token-card" style="display:none">
-<h2>Step 3: Auth Token Captured</h2>
-<pre id="token-out"></pre>
+<div class="card" id="card-activate" style="display:none">
+<h2><span class="step-num" id="num2">2</span>Activate Trial</h2>
+<p class="sub">Calls Qoder API to trigger trial grant. MachineToken is NOT needed — <code>/api/v1/userinfo</code> only needs your auth token.</p>
+<label>Spoof machine OS as macOS ARM (bypass VM detection):</label>
+<input type="checkbox" id="spoof-vm" style="width:auto" checked>
+<br><br>
+<button onclick="activateTrial()" id="activate-btn">Activate Trial</button>
+<pre id="activate-out" style="display:none"></pre>
 </div>
 
-<!-- Step 4: Trial Check -->
-<div class="card" id="trial-card" style="display:none">
-<h2>Step 4: Activate Trial (Trigger Grant)</h2>
-<p class="sub">Calls <code>/api/v1/userinfo</code> to trigger trial grant (300 credits + 14 day Pro). VM check skipped — endpoint doesn't require MachineToken.</p>
-<div class="grid2">
-<div>
-<label class="sub">Client Type</label><br>
-<select id="client-type">
-<option value="5">5 = Qoder CLI</option>
-<option value="6">6 = QoderWork</option>
-</select>
-</div>
-<div>
-<label class="sub">Machine OS</label><br>
-<select id="machine-os">
-<option value="x86_64_linux">x86_64_linux</option>
-<option value="x86_64_darwin">x86_64_darwin (macOS Intel)</option>
-<option value="arm64_darwin">arm64_darwin (macOS ARM)</option>
-<option value="x86_64_win32">x86_64_win32 (Windows)</option>
-</select>
-</div>
-</div>
-<div style="margin:8px 0">
-<label style="font-size:.8em;color:#8b949e">
-<input type="checkbox" id="spoof-vm" style="width:auto;margin-right:6px">
-Spoof: set Cosy-MachineOS to macOS ARM (non-VM)
-</label>
-</div>
-<button onclick="checkTrial()" id="trial-btn">Activate Trial</button>
-<pre id="trial-out" style="display:none"></pre>
+<div class="card" id="card-result" style="display:none">
+<h2><span class="step-num" id="num3">3</span>Result</h2>
+<table id="result-table"></table>
 </div>
 
-<!-- Reference Table -->
-<div class="card">
-<h2>Captured Flow Reference</h2>
-<table>
-<tr><td>Client ID</td><td><code>e883ade2-e6e3-4d6d-adf7-f92ceff5fdcb</code></td></tr>
-<tr><td>Auth Method</td><td>PKCE (S256) + Device Flow polling</td></tr>
+<details>
+<summary>How it works (technical details)</summary>
+<table style="margin-top:8px">
+<tr><td>Flow</td><td>PKCE S256 + Device polling</td></tr>
 <tr><td>Login URL</td><td><code>qoder.com/device/selectAccounts</code></td></tr>
-<tr><td>Poll Endpoint</td><td><code>openapi.qoder.sh/api/v1/deviceToken/poll</code></td></tr>
-<tr><td>Userinfo</td><td><code>openapi.qoder.sh/api/v1/userinfo</code></td></tr>
-<tr><td>VM Detection</td><td>Client-side via <code>runtime-info</code> binary</td></tr>
-<tr><td>Error 114</td><td><code>freeTrialAccountsExceeded</code></td></tr>
-<tr><td>CLI Version</td><td>1.1.26</td></tr>
+<tr><td>Poll</td><td><code>openapi.qoder.sh/api/v1/deviceToken/poll</code></td></tr>
+<tr><td>Activate</td><td><code>openapi.qoder.sh/api/v1/userinfo</code> (GET, Bearer only)</td></tr>
+<tr><td>Plan</td><td><code>openapi.qoder.sh/api/v2/user/plan</code></td></tr>
+<tr><td>Credits</td><td><code>openapi.qoder.sh/api/v2/quota/usage</code></td></tr>
+<tr><td>VM Check</td><td><code>openapi.qoder.sh/api/v3/user/status</code> — SKIPPED</td></tr>
+<tr><td>Client ID</td><td><code>e883ade2-e6e3-4d6d-adf7-f92ceff5fdcb</code></td></tr>
+<tr><td>Key insight</td><td> userinfo triggers trial grant WITHOUT MachineToken. VM check is a separate endpoint we skip.</td></tr>
 </table>
-</div>
-
-<h2>Live Network Log</h2>
-<div id="log-area" style="max-height:300px;overflow-y:auto;background:#010409;border:1px solid #21262d;border-radius:6px;padding:8px"></div>
+</details>
 
 <script>
-let sessionData = {machineToken:null, loginSession:null, token:null};
-const API = window.location.origin;
+let S={sessionId:null,token:null,loginSession:null,machineId:null};
+const A=location.origin;
 
-function log(msg, type='') {
-  const area = document.getElementById('log-area');
-  const div = document.createElement('div');
-  div.className = 'log-entry ' + type;
-  const time = new Date().toLocaleTimeString();
-  div.textContent = '[' + time + '] ' + msg;
-  area.appendChild(div);
-  area.scrollTop = area.scrollHeight;
+function log(m,t=''){const e=document.getElementById('log-area');if(!e)return;}
+
+async function startLogin(){
+const b=document.getElementById('login-btn');
+b.disabled=true;b.textContent='Starting...';
+try{
+const r=await fetch(A+'/api/start-login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})});
+const d=await r.json();
+S.loginSession=d;S.sessionId=d.sessionId;
+document.getElementById('login-area').style.display='block';
+document.getElementById('login-url').innerHTML='<a href="'+d.loginUrl+'" target="_blank">Click here to login →</a>';
+b.textContent='Waiting for login...';
+b.disabled=false;
+pollToken(d.sessionId);
+}catch(e){b.textContent='Failed';b.style.background='#da3633';b.disabled=false;alert(e.message);}
 }
 
-function showJSON(id, data) {
-  const el = document.getElementById(id);
-  el.style.display = 'block';
-  el.textContent = JSON.stringify(data, null, 2);
+async function pollToken(sid){
+const lg=document.getElementById('poll-log');
+lg.style.display='block';lg.textContent='';
+for(let i=0;i<180;i++){
+try{
+const r=await fetch(A+'/api/poll-token',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:sid})});
+const d=await r.json();
+lg.textContent+='['+(i+1)+'] '+d.status+'\n';
+lg.scrollTop=lg.scrollHeight;
+if(d.status===200&&d.body){
+S.token=d.body;
+document.getElementById('poll-status').innerHTML='<span class="ok">Login successful! Token captured.</span>';
+document.getElementById('login-btn').textContent='Logged In';
+document.getElementById('login-btn').style.background='#1f6feb';
+document.getElementById('num1').className='step-num step-done';
+document.getElementById('card-activate').style.display='block';
+document.getElementById('num2').className='step-num step-active';
+return;
+}
+if(d.status>=400&&d.status!==404){
+document.getElementById('poll-status').innerHTML='<span class="fail">Error: '+d.status+'</span>';
+return;
+}
+}catch(e){lg.textContent+='Error: '+e.message+'\n';}
+await new Promise(r=>setTimeout(r,2000));
+}
+document.getElementById('poll-status').innerHTML='<span class="fail">Timeout — try again</span>';
 }
 
-function switchTab(tab) {
-  document.getElementById('umid-paste').style.display = tab === 'paste' ? 'block' : 'none';
-  document.getElementById('umid-download').style.display = tab === 'download' ? 'block' : 'none';
-  document.getElementById('tab-umid-paste').classList.toggle('active', tab === 'paste');
-  document.getElementById('tab-umid-download').classList.toggle('active', tab === 'download');
-}
+async function activateTrial(){
+const b=document.getElementById('activate-btn');
+if(!S.token){alert('Login first');return;}
+b.disabled=true;b.textContent='Activating...';
+const spoof=document.getElementById('spoof-vm').checked;
+try{
+const r=await fetch(A+'/api/check-trial',{
+method:'POST',
+headers:{'Content-Type':'application/json'},
+body:JSON.stringify({
+sessionId:S.sessionId,
+tokenData:S.token,
+clientType:'5',
+machineOs:'arm64_darwin',
+spoofVm:spoof
+})
+});
+const d=await r.json();
+const out=document.getElementById('activate-out');
+out.style.display='block';
+out.textContent=JSON.stringify(d,null,2);
 
-async function startLogin() {
-  const machineToken = document.getElementById('machine-token').value.trim();
-  if (!machineToken) {
-    log('ERROR: Paste machineToken first (Step 1)', 'error');
-    alert('Paste your machineToken in Step 1 first!');
-    return;
-  }
-  sessionData.machineToken = machineToken;
-  const btn = document.getElementById('login-btn');
-  btn.disabled = true; btn.textContent = 'Generating PKCE...';
-  log('Starting PKCE device login...');
-  try {
-    const r = await fetch(API + '/api/start-login', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({machineToken})
-    });
-    const d = await r.json();
-    sessionData.loginSession = d;
-    log('PKCE: nonce=' + (d.nonce || '').substring(0, 8) + '... challenge=' + (d.challenge || '').substring(0, 12) + '...');
-    log('Login URL: ' + d.loginUrl, 'success');
-    document.getElementById('login-url-area').style.display = 'block';
-    document.getElementById('login-url').innerHTML = '<a href="' + d.loginUrl + '" target="_blank">' + d.loginUrl + '</a>';
-    btn.textContent = 'Waiting for browser auth...';
-    btn.disabled = false;
-    pollForToken(d.sessionId);
-  } catch(e) {
-    log('Login start error: ' + e.message, 'error');
-    btn.textContent = 'Failed'; btn.style.background = '#da3633'; btn.disabled = false;
-  }
+// Build result table
+const t=document.getElementById('result-table');
+t.innerHTML='';
+const s=d.summary||{};
+const rows=[
+['Login','<span class="ok">Success</span>'],
+['Token captured','<span class="ok">'+(S.token.token||'').substring(0,20)+'...</span>'],
+['Userinfo call',d.stepA_activate?.status===200?'<span class="ok">200 OK — trial triggered</span>':'<span class="fail">'+d.stepA_activate?.status+' '+JSON.stringify(d.stepA_activate?.body||{}).substring(0,80)+'</span>'],
+['Plan',d.stepB_plan?.status===200?'<span class="ok">'+(d.stepB_plan.body?.plan||d.stepB_plan.body?.user_type||'OK')+'</span>':'<span class="fail">'+d.stepB_plan?.status+'</span>'],
+['Credits',d.stepC_credits?.status===200?'<span class="ok">'+JSON.stringify(d.stepC_credits.body).substring(0,100)+'</span>':'<span class="fail">'+d.stepC_credits?.status+'</span>'],
+['VM Check','<span class="ok">Skipped (bypass)</span>'],
+];
+rows.forEach(([k,v])=>{const tr=t.insertRow();tr.insertCell().textContent=k;tr.insertCell().innerHTML=v;});
+document.getElementById('card-result').style.display='block';
+document.getElementById('num2').className='step-num step-done';
+document.getElementById('num3').className='step-num step-active';
+b.textContent='Done';
+b.style.background='#1f6feb';
+}catch(e){
+b.textContent='Failed';b.style.background='#da3633';b.disabled=false;
+const out=document.getElementById('activate-out');
+out.style.display='block';
+out.textContent='Error: '+e.message;
 }
-
-let pollCount = 0;
-async function pollForToken(sessionId) {
-  pollCount = 0;
-  const pollLog = document.getElementById('poll-log');
-  pollLog.style.display = 'block';
-  pollLog.textContent = '';
-  for (let i = 0; i < 180; i++) {
-    try {
-      const r = await fetch(API + '/api/poll-token', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({sessionId})
-      });
-      const d = await r.json();
-      pollCount++;
-      pollLog.textContent += '[' + pollCount + '] Status: ' + d.status + ' ' + (d.body ? JSON.stringify(d.body).substring(0, 100) : '') + '\n';
-      pollLog.scrollTop = pollLog.scrollHeight;
-      if (d.status === 200 && d.body) {
-        log('Token received! Status 200', 'success');
-        sessionData.token = d.body;
-        showJSON('token-out', d.body);
-        document.getElementById('token-card').style.display = 'block';
-        document.getElementById('trial-card').style.display = 'block';
-        document.getElementById('login-btn').textContent = 'Authorized';
-        document.getElementById('login-btn').style.background = '#238636';
-        document.getElementById('poll-spinner').style.display = 'none';
-        return;
-      } else if (d.status >= 400 && d.status !== 404) {
-        log('Poll error: ' + d.status, 'error');
-        document.getElementById('login-btn').textContent = 'Error';
-        document.getElementById('poll-spinner').style.display = 'none';
-        return;
-      }
-      await new Promise(r => setTimeout(r, 1000));
-    } catch(e) {
-      log('Poll fetch error: ' + e.message, 'error');
-      await new Promise(r => setTimeout(r, 2000));
-    }
-  }
-  log('Polling timeout after 180 attempts', 'error');
-  document.getElementById('login-btn').textContent = 'Timeout';
-  document.getElementById('poll-spinner').style.display = 'none';
-}
-
-async function checkTrial() {
-  const btn = document.getElementById('trial-btn');
-  if (!sessionData.token) { alert('No token'); return; }
-  btn.disabled = true; btn.textContent = 'Checking...';
-  const clientType = document.getElementById('client-type').value;
-  const machineOs = document.getElementById('machine-os').value;
-  const spoofVm = document.getElementById('spoof-vm').checked;
-  log('Checking trial: clientType=' + clientType + ' machineOs=' + (spoofVm ? 'arm64_darwin (spoofed)' : machineOs));
-  try {
-    const r = await fetch(API + '/api/check-trial', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        sessionId: sessionData.loginSession ? sessionData.loginSession.sessionId : null,
-        machineToken: sessionData.machineToken,
-        tokenData: sessionData.token,
-        clientType, machineOs, spoofVm
-      })
-    });
-    const d = await r.json();
-    showJSON('trial-out', d);
-    const status = d.apiResponse ? d.apiResponse.status : null;
-    if (status === 200) log('Trial check: 200 OK', 'success');
-    else if (status === 403) log('Trial blocked: ' + (d.errorCode || '403'), 'error');
-    else log('Trial check: ' + status, '');
-    btn.textContent = status === 200 ? 'Trial Active' : 'Check Result';
-  } catch(e) {
-    log('Trial check error: ' + e.message, 'error');
-    btn.textContent = 'Failed';
-  }
-  btn.disabled = false;
 }
 </script>
 </body>
