@@ -227,10 +227,12 @@ const uiData=await proxy(`${OPENAPI_BASE}/api/v1/userinfo`,'GET',authHeaders);
 const uiBody=uiData.status===200?JSON.parse(uiData.body):{};
 logStep(`  → ${uiData.status}: ${(uiBody.name||uiBody.username||uiBody.email||'?')}`,'step-ok');
 
-// Step 2: user/status — TRIGGER TRIAL (no MachineToken)
+// Step 2: user/status — TRIGGER TRIAL (machineToken = machineId fallback, same as CLI)
 showStatus('<span class="spinner"></span>Step 2/3: Triggering trial...','status-loading');
 logStep('GET /api/v3/user/status (trigger trial)...','');
-const stData=await proxy(`${OPENAPI_BASE}/api/v3/user/status`,'GET',authHeaders);
+// CLI fallback: n?.machineToken || i (machineId UUID)
+const statusHeaders={...authHeaders,'Cosy-MachineId':pkceState.machineId,'Cosy-MachineToken':pkceState.machineId};
+const stData=await proxy(`${OPENAPI_BASE}/api/v3/user/status`,'GET',statusHeaders);
 const stBody=stData.status===200?JSON.parse(stData.body):{};
 logStep(`  → ${stData.status}: ${JSON.stringify(stBody).substring(0,100)}`,stData.status===200?'step-ok':'step-skip');
 
