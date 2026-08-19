@@ -13,6 +13,7 @@ h2{color:#79c0ff;margin:12px 0 6px;font-size:1em}
 .card{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:14px;margin-bottom:10px}
 input,button,select{background:#0d1117;border:1px solid #30363d;color:#c9d1d9;padding:8px 12px;border-radius:6px;font-family:inherit;font-size:13px}
 input{width:100%;margin-bottom:6px}
+select{width:100%;margin-bottom:6px}
 button{background:#238636;color:#fff;border:none;cursor:pointer;padding:10px 20px;font-weight:bold;font-size:14px;border-radius:6px}
 button:hover{background:#2ea043}
 button:disabled{background:#21262d;color:#484f58;cursor:not-allowed}
@@ -33,15 +34,19 @@ td:first-child{color:#79c0ff;width:40%}
 label{font-size:.82em;color:#8b949e;display:block;margin:4px 0}
 details{margin-top:6px}
 summary{cursor:pointer;color:#8b949e;font-size:.82em}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:.7em;font-weight:bold;margin-left:4px}
+.badge-cli{background:#1f6feb;color:#fff}
+.badge-ide{background:#238636;color:#fff}
+.badge-jb{background:#d29922;color:#000}
 </style>
 </head>
 <body>
 <h1>Qoder Trial Activator</h1>
-<p class="sub">Get 300 credits + 14-day Pro without installing CLI. Reverse-engineered from CLI v1.1.26.</p>
+<p class="sub">Get 300 credits + 14-day Pro without installing CLI/IDE/JetBrains. Reverse-engineered from CLI v1.1.26.</p>
 
 <div class="card" id="card-login">
 <h2><span class="step-num" id="num1">1</span>Login with Qoder Account</h2>
-<p class="sub">Click the button → a Qoder login page opens. Sign in with your account. We auto-capture the auth token.</p>
+<p class="sub">Click login → a Qoder login page opens. Sign in with your account. We auto-capture the auth token via PKCE device flow.</p>
 <button onclick="startLogin()" id="login-btn">Login</button>
 <div id="login-area" style="display:none;margin-top:10px">
 <div class="url-box" id="login-url"></div>
@@ -52,7 +57,13 @@ summary{cursor:pointer;color:#8b949e;font-size:.82em}
 
 <div class="card" id="card-activate" style="display:none">
 <h2><span class="step-num" id="num2">2</span>Activate Trial</h2>
-<p class="sub">Calls Qoder API to trigger trial grant. MachineToken is NOT needed — <code>/api/v1/userinfo</code> only needs your auth token.</p>
+<p class="sub">Choose client type to impersonate, then activate. Calls <code>/api/v1/userinfo</code> (trigger trial grant) + <code>/api/v2/user/plan</code> + <code>/api/v2/quota/usage</code>.</p>
+<label>Client Type (determines Cosy-ClientType + Cosy-Version sent to server):</label>
+<select id="client-mode">
+<option value="cli">Qoder CLI — type=5, version=1.1.26 <span class="badge badge-cli">CLI</span></option>
+<option value="ide">Qoder IDE — type=6, version=0.2.11 <span class="badge badge-ide">IDE</span></option>
+<option value="jb">JetBrains Plugin — type=5, version=0.5.3 <span class="badge badge-jb">JB</span></option>
+</select>
 <label>Spoof machine OS as macOS ARM (bypass VM detection):</label>
 <input type="checkbox" id="spoof-vm" style="width:auto" checked>
 <br><br>
@@ -71,20 +82,27 @@ summary{cursor:pointer;color:#8b949e;font-size:.82em}
 <tr><td>Flow</td><td>PKCE S256 + Device polling</td></tr>
 <tr><td>Login URL</td><td><code>qoder.com/device/selectAccounts</code></td></tr>
 <tr><td>Poll</td><td><code>openapi.qoder.sh/api/v1/deviceToken/poll</code></td></tr>
-<tr><td>Activate</td><td><code>openapi.qoder.sh/api/v1/userinfo</code> (GET, Bearer only)</td></tr>
+<tr><td>Activate</td><td><code>openapi.qoder.sh/api/v1/userinfo</code> (GET, Bearer only, NO MachineToken)</td></tr>
 <tr><td>Plan</td><td><code>openapi.qoder.sh/api/v2/user/plan</code></td></tr>
 <tr><td>Credits</td><td><code>openapi.qoder.sh/api/v2/quota/usage</code></td></tr>
 <tr><td>VM Check</td><td><code>openapi.qoder.sh/api/v3/user/status</code> — SKIPPED</td></tr>
 <tr><td>Client ID</td><td><code>e883ade2-e6e3-4d6d-adf7-f92ceff5fdcb</code></td></tr>
-<tr><td>Key insight</td><td> userinfo triggers trial grant WITHOUT MachineToken. VM check is a separate endpoint we skip.</td></tr>
+<tr><td>CLI</td><td>Cosy-ClientType=5, Cosy-Version=1.1.26 (meets >=0.1.8)</td></tr>
+<tr><td>IDE</td><td>Cosy-ClientType=6, Cosy-Version=0.2.11 (meets >=0.2.11)</td></tr>
+<tr><td>JetBrains</td><td>Cosy-ClientType=5, Cosy-Version=0.5.3 (meets >=0.5.3)</td></tr>
+<tr><td>Key insight</td><td>userinfo triggers trial grant WITHOUT MachineToken. VM check is separate endpoint we skip. Version check is client-side (we bypass by sending correct version).</td></tr>
 </table>
 </details>
 
 <script>
-let S={sessionId:null,token:null,loginSession:null,machineId:null};
+let S={sessionId:null,token:null,loginSession:null};
 const A=location.origin;
 
-function log(m,t=''){const e=document.getElementById('log-area');if(!e)return;}
+const CLIENT_MAP={
+cli:{type:'5',version:'1.1.26',os:'x86_64_linux'},
+ide:{type:'6',version:'0.2.11',os:'arm64_darwin'},
+jb:{type:'5',version:'0.5.3',os:'x86_64_linux'}
+};
 
 async function startLogin(){
 const b=document.getElementById('login-btn');
@@ -134,7 +152,10 @@ async function activateTrial(){
 const b=document.getElementById('activate-btn');
 if(!S.token){alert('Login first');return;}
 b.disabled=true;b.textContent='Activating...';
+const mode=document.getElementById('client-mode').value;
 const spoof=document.getElementById('spoof-vm').checked;
+const c=CLIENT_MAP[mode];
+const machineOs=spoof?'arm64_darwin':c.os;
 try{
 const r=await fetch(A+'/api/check-trial',{
 method:'POST',
@@ -142,8 +163,9 @@ headers:{'Content-Type':'application/json'},
 body:JSON.stringify({
 sessionId:S.sessionId,
 tokenData:S.token,
-clientType:'5',
-machineOs:'arm64_darwin',
+clientType:c.type,
+clientVersion:c.version,
+machineOs:machineOs,
 spoofVm:spoof
 })
 });
@@ -152,14 +174,13 @@ const out=document.getElementById('activate-out');
 out.style.display='block';
 out.textContent=JSON.stringify(d,null,2);
 
-// Build result table
 const t=document.getElementById('result-table');
 t.innerHTML='';
-const s=d.summary||{};
 const rows=[
 ['Login','<span class="ok">Success</span>'],
-['Token captured','<span class="ok">'+(S.token.token||'').substring(0,20)+'...</span>'],
-['Userinfo call',d.stepA_activate?.status===200?'<span class="ok">200 OK — trial triggered</span>':'<span class="fail">'+d.stepA_activate?.status+' '+JSON.stringify(d.stepA_activate?.body||{}).substring(0,80)+'</span>'],
+['Token','<span class="ok">'+(S.token.token||'').substring(0,20)+'...</span>'],
+['Client',mode.toUpperCase()+' type='+c.type+' v='+c.version],
+['Userinfo',d.stepA_activate?.status===200?'<span class="ok">200 OK — trial triggered</span>':'<span class="fail">'+d.stepA_activate?.status+' '+JSON.stringify(d.stepA_activate?.body||{}).substring(0,80)+'</span>'],
 ['Plan',d.stepB_plan?.status===200?'<span class="ok">'+(d.stepB_plan.body?.plan||d.stepB_plan.body?.user_type||'OK')+'</span>':'<span class="fail">'+d.stepB_plan?.status+'</span>'],
 ['Credits',d.stepC_credits?.status===200?'<span class="ok">'+JSON.stringify(d.stepC_credits.body).substring(0,100)+'</span>':'<span class="fail">'+d.stepC_credits?.status+'</span>'],
 ['VM Check','<span class="ok">Skipped (bypass)</span>'],

@@ -12,6 +12,7 @@ export async function onRequestPost(context) {
     const body = await request.json();
     const sessionId = body.sessionId;
     const clientType = body.clientType || '5';
+    const clientVersion = body.clientVersion || '1.1.26';
     const machineOs = body.machineOs || 'x86_64_linux';
     const spoofVm = body.spoofVm || false;
     const machineTokenBody = body.machineToken || '';
@@ -40,8 +41,8 @@ export async function onRequestPost(context) {
     // === STEP A: Call /api/v1/userinfo WITHOUT MachineToken ===
     // This is what triggers the trial grant server-side
     // openApiJsonRequest only sends: Accept, User-Agent, Authorization
-    // The ko() wrapper adds: Cosy-Version, Cosy-ClientType, Cosy-MachineOS
-    // NO Cosy-MachineToken is sent here!
+    const CLI_VERSION = clientVersion;
+
     const userinfoHeaders = {
       'Accept': 'application/json',
       'User-Agent': `qoder/${CLI_VERSION}`,
