@@ -3,199 +3,222 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Qoder Trial Activator</title>
+<title>Qoder Trial Injector</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#0d1117;color:#c9d1d9;font-family:-apple-system,system-ui,sans-serif;padding:20px;max-width:700px;margin:0 auto}
-h1{color:#58a6ff;margin-bottom:4px;font-size:1.3em}
-h2{color:#79c0ff;margin:12px 0 6px;font-size:1em}
-.sub{color:#8b949e;margin-bottom:10px;font-size:.82em}
-.card{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:14px;margin-bottom:10px}
-input,button,select{background:#0d1117;border:1px solid #30363d;color:#c9d1d9;padding:8px 12px;border-radius:6px;font-family:inherit;font-size:13px}
-input{width:100%;margin-bottom:6px}
-select{width:100%;margin-bottom:6px}
-button{background:#238636;color:#fff;border:none;cursor:pointer;padding:10px 20px;font-weight:bold;font-size:14px;border-radius:6px}
+body{background:#0d1117;color:#c9d1d9;font-family:-apple-system,system-ui,sans-serif;padding:20px;max-width:600px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;justify-content:center}
+h1{color:#58a6ff;margin-bottom:4px;font-size:1.4em;text-align:center}
+.sub{color:#8b949e;margin-bottom:16px;font-size:.8em;text-align:center}
+.card{background:#161b22;border:1px solid #30363d;border-radius:10px;padding:20px;margin-bottom:12px}
+input,button,select{background:#0d1117;border:1px solid #30363d;color:#c9d1d9;padding:10px 14px;border-radius:8px;font-family:inherit;font-size:14px;width:100%}
+input:focus{border-color:#58a6ff;outline:none}
+button{background:#238636;color:#fff;border:none;cursor:pointer;padding:12px 20px;font-weight:bold;font-size:15px;border-radius:8px;margin-top:10px;transition:.2s}
 button:hover{background:#2ea043}
 button:disabled{background:#21262d;color:#484f58;cursor:not-allowed}
-pre{background:#010409;border:1px solid #21262d;border-radius:6px;padding:10px;overflow-x:auto;font-size:11px;line-height:1.5;color:#7ee787;white-space:pre-wrap;word-break:break-all;max-height:500px;overflow-y:auto;margin-top:8px}
-.url-box{background:#010409;border:1px solid #30363d;border-radius:6px;padding:10px;word-break:break-all;font-size:12px;color:#58a6ff;margin:6px 0}
-.url-box a{color:#58a6ff}
-table{width:100%;border-collapse:collapse;font-size:.78em;margin-top:6px}
-td{padding:5px;border-bottom:1px solid #21262d}
-td:first-child{color:#79c0ff;width:40%}
-.spinner{display:inline-block;width:14px;height:14px;border:2px solid #30363d;border-top:2px solid #58a6ff;border-radius:50%;animation:spin 1s linear infinite;vertical-align:middle}
+label{font-size:.82em;color:#8b949e;display:block;margin-bottom:4px}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid #30363d;border-top:2px solid #58a6ff;border-radius:50%;animation:spin 1s linear infinite;vertical-align:middle;margin-right:6px}
 @keyframes spin{to{transform:rotate(360deg)}}
-.step-num{display:inline-block;width:22px;height:22px;background:#238636;color:#fff;border-radius:50%;text-align:center;line-height:22px;font-size:12px;font-weight:bold;margin-right:6px}
-.step-done{background:#1f6feb!important}
-.step-active{background:#d29922!important}
+pre{background:#010409;border:1px solid #21262d;border-radius:8px;padding:12px;overflow-x:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-break:break-all;max-height:400px;overflow-y:auto;margin-top:10px}
+.result-ok{border-color:#238636!important}
+.result-fail{border-color:#da3633!important}
 .ok{color:#3fb950;font-weight:bold}
 .fail{color:#f85149;font-weight:bold}
-.wait{color:#d29922}
-label{font-size:.82em;color:#8b949e;display:block;margin:4px 0}
-details{margin-top:6px}
-summary{cursor:pointer;color:#8b949e;font-size:.82em}
-.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:.7em;font-weight:bold;margin-left:4px}
-.badge-cli{background:#1f6feb;color:#fff}
-.badge-ide{background:#238636;color:#fff}
-.badge-jb{background:#d29922;color:#000}
+.status-box{padding:14px;border-radius:8px;margin-top:10px;text-align:center;font-size:15px;font-weight:bold;display:none}
+.status-ok{background:#0d2818;border:1px solid #238636;color:#3fb950}
+.status-fail{background:#2d1117;border:1px solid #da3633;color:#f85149}
+.status-loading{background:#1c1c0d;border:1px solid #d29922;color:#d29922}
+table{width:100%;border-collapse:collapse;font-size:.82em;margin-top:8px}
+td{padding:6px 8px;border-bottom:1px solid #21262d}
+td:first-child{color:#8b949e;width:35%}
+td:last-child{color:#c9d1d9;word-break:break-all}
+.details{margin-top:8px}
+details{margin-top:8px}
+summary{cursor:pointer;color:#8b949e;font-size:.8em}
+.hint{color:#8b949e;font-size:.75em;margin-top:4px}
 </style>
 </head>
 <body>
-<h1>Qoder Trial Activator</h1>
-<p class="sub">Get 300 credits + 14-day Pro without installing CLI/IDE/JetBrains. Reverse-engineered from CLI v1.1.26.</p>
+<h1>Qoder Trial Injector</h1>
+<p class="sub">Paste Personal Access Token → auto-inject trial using IDE mode (type=6, v0.2.11)</p>
 
-<div class="card" id="card-login">
-<h2><span class="step-num" id="num1">1</span>Login with Qoder Account</h2>
-<p class="sub">Click login → a Qoder login page opens. Sign in with your account. We auto-capture the auth token via PKCE device flow.</p>
-<button onclick="startLogin()" id="login-btn">Login</button>
-<div id="login-area" style="display:none;margin-top:10px">
-<div class="url-box" id="login-url"></div>
-<p class="sub" id="poll-status">Waiting for login... <span class="spinner"></span></p>
-<pre id="poll-log" style="display:none;max-height:120px"></pre>
-</div>
-</div>
+<div class="card" id="main-card">
+<label>Personal Access Token (PAT)</label>
+<input type="password" id="pat-input" placeholder="Paste your Qoder PAT here..." autocomplete="off">
+<p class="hint">Get PAT from: qoder.com → Settings → Developer → Personal Access Tokens</p>
 
-<div class="card" id="card-activate" style="display:none">
-<h2><span class="step-num" id="num2">2</span>Activate Trial</h2>
-<p class="sub">Choose client type to impersonate, then activate. Calls <code>/api/v1/userinfo</code> (trigger trial grant) + <code>/api/v2/user/plan</code> + <code>/api/v2/quota/usage</code>.</p>
-<label>Client Type (determines Cosy-ClientType + Cosy-Version sent to server):</label>
+<label style="margin-top:10px">Client Mode</label>
 <select id="client-mode">
-<option value="cli">Qoder CLI — type=5, version=1.1.26 <span class="badge badge-cli">CLI</span></option>
-<option value="ide">Qoder IDE — type=6, version=0.2.11 <span class="badge badge-ide">IDE</span></option>
-<option value="jb">JetBrains Plugin — type=5, version=0.5.3 <span class="badge badge-jb">JB</span></option>
+<option value="ide">Qoder IDE (type=6, v0.2.11) — recommended</option>
+<option value="cli">Qoder CLI (type=5, v1.1.26)</option>
+<option value="jb">JetBrains (type=5, v0.5.3)</option>
 </select>
-<label>Spoof machine OS as macOS ARM (bypass VM detection):</label>
-<input type="checkbox" id="spoof-vm" style="width:auto" checked>
-<br><br>
-<button onclick="activateTrial()" id="activate-btn">Activate Trial</button>
-<pre id="activate-out" style="display:none"></pre>
-</div>
 
-<div class="card" id="card-result" style="display:none">
-<h2><span class="step-num" id="num3">3</span>Result</h2>
-<table id="result-table"></table>
+<button onclick="inject()" id="inject-btn">Inject Trial</button>
+
+<div class="status-box" id="status-box"></div>
 </div>
 
 <details>
-<summary>How it works (technical details)</summary>
+<summary>How it works</summary>
 <table style="margin-top:8px">
-<tr><td>Flow</td><td>PKCE S256 + Device polling</td></tr>
-<tr><td>Login URL</td><td><code>qoder.com/device/selectAccounts</code></td></tr>
-<tr><td>Poll</td><td><code>openapi.qoder.sh/api/v1/deviceToken/poll</code></td></tr>
-<tr><td>Activate</td><td><code>openapi.qoder.sh/api/v1/userinfo</code> (GET, Bearer only, NO MachineToken)</td></tr>
-<tr><td>Plan</td><td><code>openapi.qoder.sh/api/v2/user/plan</code></td></tr>
-<tr><td>Credits</td><td><code>openapi.qoder.sh/api/v2/quota/usage</code></td></tr>
-<tr><td>VM Check</td><td><code>openapi.qoder.sh/api/v3/user/status</code> — SKIPPED</td></tr>
-<tr><td>Client ID</td><td><code>e883ade2-e6e3-4d6d-adf7-f92ceff5fdcb</code></td></tr>
-<tr><td>CLI</td><td>Cosy-ClientType=5, Cosy-Version=1.1.26 (meets >=0.1.8)</td></tr>
-<tr><td>IDE</td><td>Cosy-ClientType=6, Cosy-Version=0.2.11 (meets >=0.2.11)</td></tr>
-<tr><td>JetBrains</td><td>Cosy-ClientType=5, Cosy-Version=0.5.3 (meets >=0.5.3)</td></tr>
-<tr><td>Key insight</td><td>userinfo triggers trial grant WITHOUT MachineToken. VM check is separate endpoint we skip. Version check is client-side (we bypass by sending correct version).</td></tr>
+<tr><td>Step 1</td><td>POST <code>/api/v1/jobToken/exchange</code> — exchange PAT for auth token</td></tr>
+<tr><td>Step 2</td><td>GET <code>/api/v1/userinfo</code> — trigger trial grant (no MachineToken)</td></tr>
+<tr><td>Step 3</td><td>GET <code>/api/v2/user/plan</code> — check plan status</td></tr>
+<tr><td>Step 4</td><td>GET <code>/api/v2/quota/usage</code> — check credits</td></tr>
+<tr><td>VM Check</td><td>SKIP <code>/api/v3/user/status</code> — not called</td></tr>
+<tr><td>API Base</td><td><code>openapi.qoder.sh</code></td></tr>
 </table>
 </details>
 
 <script>
-let S={sessionId:null,token:null,loginSession:null};
-const A=location.origin;
-
 const CLIENT_MAP={
-cli:{type:'5',version:'1.1.26',os:'x86_64_linux'},
 ide:{type:'6',version:'0.2.11',os:'arm64_darwin'},
+cli:{type:'5',version:'1.1.26',os:'x86_64_linux'},
 jb:{type:'5',version:'0.5.3',os:'x86_64_linux'}
 };
 
-async function startLogin(){
-const b=document.getElementById('login-btn');
-b.disabled=true;b.textContent='Starting...';
-try{
-const r=await fetch(A+'/api/start-login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})});
-const d=await r.json();
-S.loginSession=d;S.sessionId=d.sessionId;
-document.getElementById('login-area').style.display='block';
-document.getElementById('login-url').innerHTML='<a href="'+d.loginUrl+'" target="_blank">Click here to login →</a>';
-b.textContent='Waiting for login...';
-b.disabled=false;
-pollToken(d.sessionId);
-}catch(e){b.textContent='Failed';b.style.background='#da3633';b.disabled=false;alert(e.message);}
+function showStatus(msg,cls){
+const b=document.getElementById('status-box');
+b.className='status-box '+cls;
+b.style.display='block';
+b.innerHTML=msg;
 }
+function hideStatus(){document.getElementById('status-box').style.display='none';}
 
-async function pollToken(sid){
-const lg=document.getElementById('poll-log');
-lg.style.display='block';lg.textContent='';
-for(let i=0;i<180;i++){
-try{
-const r=await fetch(A+'/api/poll-token',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:sid})});
-const d=await r.json();
-lg.textContent+='['+(i+1)+'] '+d.status+'\n';
-lg.scrollTop=lg.scrollHeight;
-if(d.status===200&&d.body){
-S.token=d.body;
-document.getElementById('poll-status').innerHTML='<span class="ok">Login successful! Token captured.</span>';
-document.getElementById('login-btn').textContent='Logged In';
-document.getElementById('login-btn').style.background='#1f6feb';
-document.getElementById('num1').className='step-num step-done';
-document.getElementById('card-activate').style.display='block';
-document.getElementById('num2').className='step-num step-active';
-return;
-}
-if(d.status>=400&&d.status!==404){
-document.getElementById('poll-status').innerHTML='<span class="fail">Error: '+d.status+'</span>';
-return;
-}
-}catch(e){lg.textContent+='Error: '+e.message+'\n';}
-await new Promise(r=>setTimeout(r,2000));
-}
-document.getElementById('poll-status').innerHTML='<span class="fail">Timeout — try again</span>';
-}
-
-async function activateTrial(){
-const b=document.getElementById('activate-btn');
-if(!S.token){alert('Login first');return;}
-b.disabled=true;b.textContent='Activating...';
+async function inject(){
+const pat=document.getElementById('pat-input').value.trim();
+if(!pat){alert('Paste your PAT first');return;}
 const mode=document.getElementById('client-mode').value;
-const spoof=document.getElementById('spoof-vm').checked;
 const c=CLIENT_MAP[mode];
-const machineOs=spoof?'arm64_darwin':c.os;
+const btn=document.getElementById('inject-btn');
+btn.disabled=true;btn.textContent='Injecting...';
+showStatus('<span class="spinner"></span>Exchanging PAT...','status-loading');
+
+const headers={
+'Accept':'application/json',
+'User-Agent':'qoder/'+c.version,
+'Cosy-Version':c.version,
+'Cosy-ClientType':c.type,
+'Cosy-MachineOS':c.os,
+'Content-Type':'application/json'
+};
+
 try{
-const r=await fetch(A+'/api/check-trial',{
+// Step 1: Exchange PAT → auth token
+const exResp=await fetch('/api/proxy',{
 method:'POST',
 headers:{'Content-Type':'application/json'},
 body:JSON.stringify({
-sessionId:S.sessionId,
-tokenData:S.token,
-clientType:c.type,
-clientVersion:c.version,
-machineOs:machineOs,
-spoofVm:spoof
+url:'https://openapi.qoder.sh/api/v1/jobToken/exchange',
+method:'POST',
+headers:headers,
+body:JSON.stringify({personal_token:pat})
 })
 });
-const d=await r.json();
-const out=document.getElementById('activate-out');
-out.style.display='block';
-out.textContent=JSON.stringify(d,null,2);
+const exData=await exResp.json();
 
-const t=document.getElementById('result-table');
-t.innerHTML='';
-const rows=[
-['Login','<span class="ok">Success</span>'],
-['Token','<span class="ok">'+(S.token.token||'').substring(0,20)+'...</span>'],
-['Client',mode.toUpperCase()+' type='+c.type+' v='+c.version],
-['Userinfo',d.stepA_activate?.status===200?'<span class="ok">200 OK — trial triggered</span>':'<span class="fail">'+d.stepA_activate?.status+' '+JSON.stringify(d.stepA_activate?.body||{}).substring(0,80)+'</span>'],
-['Plan',d.stepB_plan?.status===200?'<span class="ok">'+(d.stepB_plan.body?.plan||d.stepB_plan.body?.user_type||'OK')+'</span>':'<span class="fail">'+d.stepB_plan?.status+'</span>'],
-['Credits',d.stepC_credits?.status===200?'<span class="ok">'+JSON.stringify(d.stepC_credits.body).substring(0,100)+'</span>':'<span class="fail">'+d.stepC_credits?.status+'</span>'],
-['VM Check','<span class="ok">Skipped (bypass)</span>'],
-];
-rows.forEach(([k,v])=>{const tr=t.insertRow();tr.insertCell().textContent=k;tr.insertCell().innerHTML=v;});
-document.getElementById('card-result').style.display='block';
-document.getElementById('num2').className='step-num step-done';
-document.getElementById('num3').className='step-num step-active';
-b.textContent='Done';
-b.style.background='#1f6feb';
+if(exData.status!==200){
+showStatus('❌ Failed: Token exchange failed ('+exData.status+')','status-fail');
+btn.disabled=false;btn.textContent='Inject Trial';
+return;
+}
+
+const exBody=typeof exData.body==='string'?JSON.parse(exData.body):exData.body;
+const authToken=exBody.token||exBody.device_token||exBody.access_token;
+if(!authToken){
+showStatus('❌ Failed: No token in response','status-fail');
+btn.disabled=false;btn.textContent='Inject Trial';
+return;
+}
+
+showStatus('<span class="spinner"></span>Triggering trial...','status-loading');
+
+// Step 2: GET /api/v1/userinfo — trigger trial grant
+const authHeaders={
+'Accept':'application/json',
+'User-Agent':'qoder/'+c.version,
+'Authorization':'Bearer '+authToken,
+'Cosy-Version':c.version,
+'Cosy-ClientType':c.type,
+'Cosy-MachineOS':c.os
+};
+
+const uiResp=await fetch('/api/proxy',{
+method:'POST',
+headers:{'Content-Type':'application/json'},
+body:JSON.stringify({
+url:'https://openapi.qoder.sh/api/v1/userinfo',
+method:'GET',
+headers:authHeaders
+})
+});
+const uiData=await uiResp.json();
+
+if(uiData.status!==200){
+let errMsg='Unknown error';
+try{const e=typeof uiData.body==='string'?JSON.parse(uiData.body):uiData.body;errMsg=e.message||e.error||e.code||'Unknown';}catch{}
+showStatus('❌ Failed: '+errMsg+' ('+uiData.status+')','status-fail');
+btn.disabled=false;btn.textContent='Inject Trial';
+return;
+}
+
+const uiBody=typeof uiData.body==='string'?JSON.parse(uiData.body):uiData.body;
+showStatus('<span class="spinner"></span>Checking plan & credits...','status-loading');
+
+// Step 3: GET /api/v2/user/plan
+const planResp=await fetch('/api/proxy',{
+method:'POST',
+headers:{'Content-Type':'application/json'},
+body:JSON.stringify({
+url:'https://openapi.qoder.sh/api/v2/user/plan',
+method:'GET',
+headers:authHeaders
+})
+});
+const planData=await planResp.json();
+const planBody=planData.status===200?(typeof planData.body==='string'?JSON.parse(planData.body):planData.body):null;
+
+// Step 4: GET /api/v2/quota/usage
+const quotaResp=await fetch('/api/proxy',{
+method:'POST',
+headers:{'Content-Type':'application/json'},
+body:JSON.stringify({
+url:'https://openapi.qoder.sh/api/v2/quota/usage',
+method:'GET',
+headers:authHeaders
+})
+});
+const quotaData=await quotaResp.json();
+const quotaBody=quotaData.status===200?(typeof quotaData.body==='string'?JSON.parse(quotaData.body):quotaData.body):null;
+
+// SUCCESS
+const card=document.getElementById('main-card');
+card.classList.add('result-ok');
+
+let detailHtml='<table>';
+detailHtml+='<tr><td>User</td><td>'+((uiBody.name||uiBody.username)||'?')+'</td></tr>';
+detailHtml+='<tr><td>Email</td><td>'+(uiBody.email||'?')+'</td></tr>';
+detailHtml+='<tr><td>UID</td><td>'+(uiBody.uid||uiBody.id||uiBody.user_id||'?')+'</td></tr>';
+detailHtml+='<tr><td>Org</td><td>'+(uiBody.organization_name||uiBody.orgName||'?')+'</td></tr>';
+if(planBody){
+detailHtml+='<tr><td>Plan</td><td>'+(planBody.plan||planBody.plan_type||'?')+'</td></tr>';
+detailHtml+='<tr><td>User Type</td><td>'+(planBody.user_type||planBody.userType||'?')+'</td></tr>';
+}
+if(quotaBody){
+detailHtml+='<tr><td>Credits</td><td>'+JSON.stringify(quotaBody)+'</td></tr>';
+}
+detailHtml+='</table>';
+
+showStatus('✅ Inject Success — Trial Activated!'+detailHtml,'status-ok');
+btn.textContent='Injected ✓';
+btn.style.background='#1f6feb';
+
 }catch(e){
-b.textContent='Failed';b.style.background='#da3633';b.disabled=false;
-const out=document.getElementById('activate-out');
-out.style.display='block';
-out.textContent='Error: '+e.message;
+showStatus('❌ Failed: '+e.message,'status-fail');
+const card=document.getElementById('main-card');
+card.classList.add('result-fail');
+btn.disabled=false;btn.textContent='Inject Trial';
+btn.style.background='#da3633';
 }
 }
 </script>
