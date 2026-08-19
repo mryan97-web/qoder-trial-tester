@@ -134,11 +134,18 @@ pkceState={verifier:pkce.verifier,challenge:pkce.challenge,nonce,machineId};
 
 const loginUrl=`${WEB_BASE}/device/selectAccounts?challenge=${pkce.challenge}&challenge_method=S256&nonce=${nonce}&machine_id=${machineId}&client_id=${CLIENT_ID_IDE}`;
 
+// Auto-open login URL in new tab
+window.open(loginUrl,'_blank');
+
+// Show the link as backup
 const link=document.getElementById('login-link');
 link.href=loginUrl;
 document.getElementById('login-link-box').style.display='block';
 
 hide('step1');show('step2');
+
+// Auto-start polling immediately
+setTimeout(()=>pollForToken(),500);
 }catch(e){
 alert('Error: '+e.message);
 btn.disabled=false;btn.textContent='Start Device Login';
@@ -158,12 +165,12 @@ async function pollForToken(){
 const btn=document.getElementById('poll-btn');
 btn.disabled=true;btn.textContent='Polling for token...';
 hide('step2');show('step3');
-logStep('Polling for auth token...','');
 
+// Auto-poll immediately - no need to click "I've Authorized"
+logStep('Polling for auth token...','');
 const{verifier,nonce}=pkceState;
 const params=new URLSearchParams({nonce,verifier,challenge_method:'S256'});
 const pollUrl=`${OPENAPI_BASE}/api/v1/deviceToken/poll?${params}`;
-
 const headers={
 'Accept':'application/json',
 'Cosy-Version':CLI_VERSION,
@@ -171,40 +178,32 @@ const headers={
 'Cosy-MachineOS':MACHINE_OS
 };
 
-// Poll for up to 5 minutes (300 seconds)
+// Poll for up to 5 min, interval 1.5s
 const maxTime=Date.now()+300000;
 let attempts=0;
 
 while(Date.now()<maxTime){
 attempts++;
-showStatus(`<span class="spinner"></span>Waiting for authorization... (attempt ${attempts})`,'status-loading');
-
+showStatus(`<span class="spinner"></span>Waiting for authorization... (${attempts})`,'status-loading');
 const data=await proxy(pollUrl,'GET',headers);
-
 if(data.status===200){
 const body=JSON.parse(data.body);
 const token=body.token||body.device_token||body.access_token;
 if(token){
 logStep(`Token received (attempt ${attempts})`,'step-ok');
 pkceState.token=token;
-await injectTrial();
-return;
+await injectTrial();return;
 }
 }
-
 if(data.status===400||data.status===403){
 let m='Unknown';
-try{m=JSON.parse(data.body).errorMessage||JSON.parse(data.body).message||data.body;}catch{m=data.body;}
+try{m=JSON.parse(data.body).errorMessage||data.body;}catch{m=data.body;}
 logStep(`Poll error: ${data.status} ${m}`,'step-fail');
 showStatus('❌ Authorization failed: '+m,'status-fail');
-btn.disabled=false;btn.textContent='Continue';
-return;
+btn.disabled=false;btn.textContent='Continue';return;
 }
-
-// 404 = still waiting, keep polling
-await new Promise(r=>setTimeout(r,3000));
+await new Promise(r=>setTimeout(r,1500));
 }
-
 logStep('Poll timed out after 5 minutes','step-fail');
 showStatus('❌ Timed out — please try again and authorize faster','status-fail');
 btn.disabled=false;btn.textContent='Continue';
