@@ -317,22 +317,30 @@ const uiD=await proxy(`${OPENAPI}/api/v1/userinfo`,'GET',aH);
 const ui=uiD.status===200?JSON.parse(uiD.body):{};
 log('GET /api/v1/userinfo → '+uiD.status+': '+(ui.name||ui.email||'?'),'step-ok');
 
-// Step 4: WASM — generate auth fields FIRST, then create context WITH auth fields
+// Step 4: WASM — generate auth fields FIRST, then create context with FULL user info
 log('===== STEP 4: WASM auth fields =====','step-info');
 let encryptInfo='',key='',wasmCtx=0;
 if(wExp){
 try{
-// 4a: Generate auth fields (global function, needs only userInfoJson)
+// 4a: Generate auth fields (input: {uid, organization_id, organization_tags, data_policy_agreed})
 const f=genAuthFields(JSON.stringify({uid:ui.uid||ui.id||'',organization_id:ui.organization_id||'',organization_tags:ui.organization_tags||[],data_policy_agreed:true}));
 encryptInfo=f.encrypt_user_info||'';key=f.key||'';
 log('encrypt_user_info: '+(encryptInfo.substring(0,30)||'empty'),'step-ok');
 log('key: '+(key.substring(0,30)||'empty'),'step-ok');
 
-// 4b: Create QoderContext WITH auth fields already embedded
-wasmCtx=createWasmCtx(mId,VERSION,
-JSON.stringify({uid:ui.uid||ui.id||'',encrypt_user_info:encryptInfo,key:key}),
+// 4b: Build FULL user info (like CLI's cachedUserInfo)
+const fullUserInfo={uid:ui.uid||ui.id||'',name:ui.name||'',email:ui.email||'',
+security_oauth_token:token,access_token:token,
+expire_time:exBody.expire_time||exBody.expireTimeS||0,
+login_method:'token',login_timestamp:Math.floor(Date.now()/1000),
+encrypt_user_info:encryptInfo,key:key,
+organization_id:ui.organization_id||null,organization_tags:ui.organization_tags||[],
+data_policy_agreed:true};
+
+// 4c: Create QoderContext with FULL user info + client metadata
+wasmCtx=createWasmCtx(mId,VERSION,JSON.stringify(fullUserInfo),
 JSON.stringify({client_type:'6',business_product:'qoder_work',business_type:'agent',scene:'assistant'}));
-log('QoderContext created with auth fields (ptr='+wasmCtx+')','step-ok');
+log('QoderContext created with full user info (ptr='+wasmCtx+')','step-ok');
 }catch(e){log('WASM auth FAILED: '+e.message,'step-fail');}
 }
 
@@ -349,7 +357,10 @@ const rPtr=wasmPrepareRequest(wasmCtx,CENTER,policyPath,'POST','auth',policyBody
 const signed=readResult(rPtr);
 log('Signed URL: '+signed.url.substring(0,100),'step-ok');
 log('Signed headers: '+JSON.stringify(signed.headers).substring(0,120),'step-ok');
-policyD=await proxy(signed.url,'POST',signed.headers,signed.body||policyBody);
+// Merge WASM-signed headers with Cosy identity headers (like ko() does)
+const mergedHeaders={...signed.headers,
+'Cosy-Version':VERSION,'Cosy-ClientType':CLIENT_TYPE,'Cosy-MachineOS':MACHINE_OS};
+policyD=await proxy(signed.url,'POST',mergedHeaders,signed.body||policyBody);
 log('POST center → '+policyD.status+': '+policyD.body.substring(0,100),policyD.status===200?'step-ok':'step-fail');
 if(wExp.__wbg_requestresult_free)wExp.__wbg_requestresult_free(rPtr,0);
 }catch(e){log('WASM prepareRequest FAILED: '+e.message,'step-fail');policyD={status:0,body:e.message};}
