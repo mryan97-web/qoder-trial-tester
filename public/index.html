@@ -182,26 +182,39 @@ return true;
 
 function passStr(s){const buf=enc.encode(s);const ptr=wExp.__wbindgen_export2(buf.length,1)>>>0;new Uint8Array(wMem.buffer).set(buf,ptr);return[ptr,buf.length];}
 function createWasmCtx(mi,cv,ui,cm){
-const[a,b]=passStr(mi),[c,d]=passStr(cv),[e,f]=passStr(ui),[g,h]=passStr(cm);
-return wExp.qodercontext_new(a,b,c,d,e,f,g,h)>>>0;
+const e=wExp;
+const[a,b]=passStr(mi),[c,d]=passStr(cv),[g,h]=passStr(ui);
+let i=0,j=0;if(cm){const[x,y]=passStr(cm);i=x;j=y;}
+const sp=e.__wbindgen_add_to_stack_pointer(-16);
+try{e.qodercontext_new(sp,a,b,c,d,g,h,i,j);
+const dv=new DataView(wMem.buffer);
+const ptr=dv.getInt32(sp,true),errPtr=dv.getInt32(sp+4,true);
+if(dv.getInt32(sp+8,true))throw new Error('ctx new error: '+errPtr);
+return ptr>>>0;
+}finally{e.__wbindgen_add_to_stack_pointer(16);}
 }
 function genAuthFields(uij){
+const e=wExp;
 const[p,l]=passStr(uij);
-const sp=wExp.__wbindgen_add_to_stack_pointer(-16);
-try{wExp.generate_runtime_auth_fields(p,l);
-const dv=new DataView(wMem.buffer);const rP=dv.getInt32(sp,true),rL=dv.getInt32(sp+4,true);
-if(dv.getInt32(sp+8,true))throw new Error('genAuthFields error');
-const json=dStr(rP,rL);wExp.__wbindgen_export4(rP,rL,1);return JSON.parse(json);
-}finally{wExp.__wbindgen_add_to_stack_pointer(16);}
+const sp=e.__wbindgen_add_to_stack_pointer(-16);
+try{e.generate_runtime_auth_fields(sp,p,l);
+const dv=new DataView(wMem.buffer);
+const rP=dv.getInt32(sp,true),rL=dv.getInt32(sp+4,true),eP=dv.getInt32(sp+8,true),eF=dv.getInt32(sp+12,true);
+if(eF){throw new Error(dStr(eP,eF));}
+const json=dStr(rP,rL);e.__wbindgen_export4(rP,rL,1);return JSON.parse(json);
+}finally{e.__wbindgen_add_to_stack_pointer(16);}
 }
 function wasmPrepareRequest(ctx,ep,path,method,authMode,body){
-const[a,b]=passStr(ep),[c,d]=passStr(path),[e,f]=passStr(method),[g,h]=passStr(authMode);
+const e=wExp;
+const[a,b]=passStr(ep),[c,d]=passStr(path),[g,h]=passStr(method),[i,j]=passStr(authMode);
 let bP=0,bL=0;if(body){const[x,y]=passStr(body);bP=x;bL=y;}
-const sp=wExp.__wbindgen_add_to_stack_pointer(-16);
-try{wExp.qodercontext_prepareRequest(sp,ctx,a,b,c,d,e,f,g,h,bP,bL,0,0);
-const dv=new DataView(wMem.buffer);const rP=dv.getInt32(sp,true);
-if(dv.getInt32(sp+8,true))throw new Error('prepareRequest error');return rP>>>0;
-}finally{wExp.__wbindgen_add_to_stack_pointer(16);}
+const sp=e.__wbindgen_add_to_stack_pointer(-16);
+try{e.qodercontext_prepareRequest(sp,ctx,a,b,c,d,g,h,i,j,bP,bL,0,0);
+const dv=new DataView(wMem.buffer);
+const rPtr=dv.getInt32(sp,true),errPtr=dv.getInt32(sp+4,true);
+if(dv.getInt32(sp+8,true))throw new Error('prepareRequest error: '+errPtr);
+return rPtr>>>0;
+}finally{e.__wbindgen_add_to_stack_pointer(16);}
 }
 function readResult(rPtr){
 let url='',body='';
