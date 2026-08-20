@@ -1,4 +1,4 @@
-const VPS_BASE = 'http://54.210.94.74/qinject';
+const VPS_BASE = 'https://volt-performs-vast-placed.trycloudflare.com';
 
 export async function onRequest(context) {
   const { request } = context;
