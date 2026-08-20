@@ -317,22 +317,22 @@ const uiD=await proxy(`${OPENAPI}/api/v1/userinfo`,'GET',aH);
 const ui=uiD.status===200?JSON.parse(uiD.body):{};
 log('GET /api/v1/userinfo → '+uiD.status+': '+(ui.name||ui.email||'?'),'step-ok');
 
-// Step 4: WASM context + auth fields
+// Step 4: WASM — generate auth fields FIRST, then create context WITH auth fields
 log('===== STEP 4: WASM auth fields =====','step-info');
 let encryptInfo='',key='',wasmCtx=0;
 if(wExp){
 try{
-wasmCtx=createWasmCtx(mId,VERSION,JSON.stringify({uid:ui.uid||ui.id||'',encrypt_user_info:'',key:''}),
-JSON.stringify({client_type:'6',business_product:'qoder_work',business_type:'agent',scene:'assistant'}));
-log('QoderContext created','step-ok');
+// 4a: Generate auth fields (global function, needs only userInfoJson)
 const f=genAuthFields(JSON.stringify({uid:ui.uid||ui.id||'',organization_id:ui.organization_id||'',organization_tags:ui.organization_tags||[],data_policy_agreed:true}));
 encryptInfo=f.encrypt_user_info||'';key=f.key||'';
 log('encrypt_user_info: '+(encryptInfo.substring(0,30)||'empty'),'step-ok');
 log('key: '+(key.substring(0,30)||'empty'),'step-ok');
-if(wExp.qodercontext_refreshAuthFields&&encryptInfo){
-const[nP,nL]=passStr(JSON.stringify({uid:ui.uid||ui.id||'',encrypt_user_info:encryptInfo,key:key}));
-wExp.qodercontext_refreshAuthFields(wasmCtx,nP,nL);log('Context refreshed','step-ok');
-}
+
+// 4b: Create QoderContext WITH auth fields already embedded
+wasmCtx=createWasmCtx(mId,VERSION,
+JSON.stringify({uid:ui.uid||ui.id||'',encrypt_user_info:encryptInfo,key:key}),
+JSON.stringify({client_type:'6',business_product:'qoder_work',business_type:'agent',scene:'assistant'}));
+log('QoderContext created with auth fields (ptr='+wasmCtx+')','step-ok');
 }catch(e){log('WASM auth FAILED: '+e.message,'step-fail');}
 }
 
