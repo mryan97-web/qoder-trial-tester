@@ -1,427 +1,207 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Qoder IDE Simulator</title>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>inject · qoder</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:system-ui,sans-serif;background:#0d1117;color:#c9d1d9;padding:20px;max-width:700px;margin:0 auto}
-h1{font-size:1.5em;margin-bottom:10px;color:#58a6ff}
-.info{background:#161b22;padding:12px;border-radius:8px;margin-bottom:15px;border:1px solid #30363d;font-size:0.85em;color:#8b949e}
-.btn-row{display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap}
-button{background:#238636;color:#fff;border:none;padding:10px 20px;border-radius:6px;font-size:0.95em;cursor:pointer}
-button:disabled{background:#21262d;color:#6e7681;cursor:wait}
-button.test-btn{background:#1f6feb}
-input{width:100%;padding:10px;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#c9d1d9;font-size:0.9em;margin-bottom:10px}
-.step-log{background:#161b22;padding:8px 12px;border-radius:4px;margin-top:8px;font-family:monospace;font-size:0.8em;max-height:500px;overflow-y:auto;border:1px solid #30363d}
-.step-ok{color:#3fb950}.step-fail{color:#f85149}.step-skip{color:#d29922}.step-info{color:#58a6ff}
-.status-box{padding:15px;border-radius:8px;margin-bottom:10px;display:none}
-.status-loading{background:#1c2128;border:1px solid #30363d;color:#8b949e}
-.status-ok{background:#0d2818;border:1px solid #238636;color:#3fb950}
-.status-fail{background:#2d0d0d;border:1px solid #f85149;color:#f85149}
-.spinner{display:inline-block;width:16px;height:16px;border:2px solid #30363d;border-top-color:#58a6ff;border-radius:50%;animation:sp 1s linear infinite;margin-right:5px;vertical-align:middle}
-@keyframes sp{to{transform:rotate(360deg)}}
-#main-card{background:#161b22;border-radius:8px;padding:0;margin-top:10px}
-.result-ok{border:2px solid #238636}.result-fail{border:2px solid #f85149}
-table{width:100%;border-collapse:collapse}
-td{padding:6px 10px;border-bottom:1px solid #30363d;font-size:0.85em}
-td:first-child{color:#8b949e;width:35%}
-#raw-out{display:none;margin-top:10px;padding:10px;background:#0d1117;border-radius:4px;font-family:monospace;font-size:0.75em;white-space:pre-wrap;word-break:break-all;color:#8b949e;max-height:300px;overflow-y:auto}
+*,::before,::after{box-sizing:border-box}
+:root{--bg:#F2F2F7;--card:#FFF;--bar:#F7F7F9;--fill:#F5F5F7;--ink:#1D1D1F;--muted:#86868B;--faint:#8E8E93;--line:#00000014;--accent:#0071E3;--ok:#30D158;--ok-ink:#248A3D;--ok-soft:#30D1581F;--bad:#FF453A;--bad-ink:#D70015;--bad-soft:#FF453A26;--warn:#FF9F0A;--warn-soft:#FF9F0A26;--r:12px;--ease:cubic-bezier(.22,1,.36,1);--sh:0 4px 8px #0000000F,0 14px 36px #00000014}
+:root[data-theme="dark"]{--bg:#1C1C1E;--card:#2C2C2E;--bar:#232326;--fill:#3A3A3C;--ink:#FFF;--muted:#98989F;--faint:#6E6E73;--line:#FFFFFF1F;--accent:#0A84FF;--ok:#32D74B;--ok-ink:#32D74B;--ok-soft:#32D74B26;--bad:#FF453A;--bad-ink:#FF453A;--bad-soft:#FF453A26;--sh:0 4px 8px #00000033,0 14px 36px #0000004D}
+body{margin:0;min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(180deg,var(--bg) 0%,var(--bg) 60%);color:var(--ink);font-family:system-ui,sans-serif;font-size:13px;line-height:1.45}
+.win{width:100%;max-width:480px;background:var(--card);border-radius:12px;box-shadow:var(--sh);outline:1px solid var(--line);overflow:hidden}
+.wbar{display:flex;align-items:center;gap:5px;height:33px;padding:0 12px;background:var(--bar);border-bottom:1px solid var(--line)}
+.tl{width:10px;height:10px;border-radius:50%;flex:none}.tl:nth-child(1){background:#FF5F57}.tl:nth-child(2){background:#FEBC2E}.tl:nth-child(3){background:#28C840}
+.wtitle{flex:1;text-align:center;font:600 11px system-ui;color:var(--ink)}
+.wbody{padding:16px 16px 18px}
+.trow{display:flex;align-items:baseline;gap:1px}
+.t1{font-size:22px;font-weight:600;letter-spacing:-.5px}.t2{font-size:22px;font-weight:700;color:var(--accent)}
+.sub{margin:3px 0 0;color:var(--muted);font-size:12.5px}
+.field{display:flex;flex-direction:column;gap:4px;margin-top:12px}
+.flab{font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+.ff{display:flex;align-items:center;gap:8px;height:34px;padding:0 10px;background:var(--fill);border-radius:7px;outline:1px solid var(--line)}
+.ff:focus-within{outline:2px solid var(--accent)}
+.ff input{flex:1;min-width:0;background:none;border:0;outline:0;color:var(--ink);font:500 12.5px monospace}
+.ff input::placeholder{color:var(--faint)}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:38px;margin-top:12px;border:0;border-radius:9px;background:linear-gradient(110deg,#0071E3,#0A84FF);color:#fff;font:600 13.5px system-ui;cursor:pointer;box-shadow:0 4px 12px #0071E34D;transition:filter .2s}
+.btn:hover{filter:brightness(1.07)}.btn:disabled{opacity:.55;cursor:default;box-shadow:none}
+.btn .spin{width:15px;height:15px;border-radius:50%;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;display:none;animation:spin .7s linear infinite}
+.btn.loading .txt{visibility:hidden}.btn.loading .spin{display:block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.err{display:none;margin-top:12px;padding:9px 11px;border-radius:8px;background:var(--bad-soft);color:var(--bad-ink);font-size:12px}
+.result{display:none;margin-top:14px;border-top:1px solid var(--line);padding-top:13px}
+.result.show{display:block;animation:rise .3s var(--ease)}
+@keyframes rise{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.rhead{display:flex;align-items:center;gap:8px}
+.rlab{font-size:9px;font-weight:600;letter-spacing:1.6px;text-transform:uppercase;color:var(--faint)}
+.rspacer{flex:1;height:1px;background:var(--line)}
+.respill{display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:999px;background:var(--ok-soft);color:var(--ok-ink);font:600 9.5px system-ui}
+.respill .pdot{width:5px;height:5px;border-radius:50%;background:var(--ok)}
+.respill.bad{background:var(--bad-soft);color:var(--bad-ink)}.respill.bad .pdot{background:var(--bad)}
+.verdict{display:flex;align-items:center;gap:9px;margin-top:10px;padding:10px 12px;background:var(--fill);border-radius:9px;outline:1px solid var(--line)}
+.vbar{width:3.5px;align-self:stretch;border-radius:999px;background:var(--ok)}
+.verdict.fail .vbar{background:var(--bad)}
+.vbig{font-size:17px;font-weight:700;letter-spacing:-.3px;color:var(--ok-ink)}
+.verdict.fail .vbig{color:var(--bad-ink)}
+.vsub{font-size:7.5px;font-weight:600;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase}
+.vspace{flex:1}
+.dur{display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:999px;background:var(--card);outline:1px solid var(--line);font:600 10px system-ui}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:0 16px;margin-top:10px}
+.row{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:5px 0;border-bottom:1px solid #0000000A;font-size:11.5px}
+.row .k{color:var(--muted);white-space:nowrap}.row .v{color:var(--ink);font-weight:600;text-align:right;word-break:break-word}
+.log-box{margin-top:12px;background:#0d1117;border:1px solid #21262d;border-radius:8px;padding:12px;max-height:300px;overflow-y:auto;font-family:'Courier New',monospace;font-size:11px;line-height:1.6;display:none}
+.log-box.show{display:block}
+.log-box .log-line{color:#c9d1d9;white-space:pre-wrap;word-break:break-all}
+.log-box .log-line.inject{color:#58a6ff}.log-box .log-line.success{color:#3fb950}.log-box .log-line.error{color:#f85149}.log-box .log-line.warning{color:#d29922}
+.log-header{color:#8b949e;font-size:10px;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #21262d}
+.histblock{margin-top:16px;border-top:1px solid var(--line);padding-top:13px}
+.histhead{display:flex;align-items:center;gap:10px}
+.sechead{font-size:9px;font-weight:600;letter-spacing:1.6px;text-transform:uppercase;color:var(--faint)}
+.counter{margin-left:auto;color:var(--muted);font-size:11.5px}
+.hist{list-style:none;margin:10px 0 0;padding:0}
+.hist li{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid #0000000A;font-size:12px}
+.hist li:last-child{border:0}
+.histempty{justify-content:center;padding:12px 0!important;color:var(--muted)}
+.dot2{width:7px;height:7px;border-radius:50%;flex:none}
+.hp{font-family:monospace;font-size:11.5px;color:var(--ink)}
+.htime{margin-left:auto;color:var(--muted);font-size:11px;white-space:nowrap}
+.hist-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;padding:2px 6px;border-radius:4px}
+.hist-label.ok{color:#16a34a;background:rgba(34,197,94,.1)}.hist-label.fail{color:#dc2626;background:rgba(239,68,68,.1)}
 .hidden{display:none!important}
-.session-list{margin-top:10px;padding:10px;background:#161b22;border-radius:6px;border:1px solid #30363d}
-.session-item{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #21262d;font-size:0.8em}
-.session-item:last-child{border-bottom:none}
-.heartbeat-dot{width:8px;height:8px;border-radius:50%;background:#3fb950;display:inline-block;margin-right:5px}
-.heartbeat-dot.dead{background:#f85149}
-</style>
-</head>
-<body>
-<h1>🔥 Qoder IDE Simulator</h1>
-<div class="info">Paste PAT → WASM-signed request → center.qoder.sh → Trial activated<br>Keep-alive: all sessions stay alive via background heartbeat</div>
-
-<div class="btn-row">
-<button class="test-btn" id="test-btn" onclick="runSelfTest()">🧪 Test WASM (no account)</button>
+#st{display:none;align-items:center;gap:8px;font-size:12px;padding:10px 14px;border-radius:8px;margin-top:12px}
+#st.show{display:flex}
+#st.st-processing{background:var(--warn-soft);border:1px solid rgba(234,179,8,.3);color:#ca8a04}
+#st.st-success{background:var(--ok-soft);border:1px solid rgba(34,197,94,.3);color:var(--ok-ink)}
+#st.st-fail{background:var(--bad-soft);border:1px solid rgba(239,68,68,.3);color:var(--bad-ink)}
+#st.st-idle{background:transparent;border:1px solid var(--line);color:var(--muted)}
+.idot{width:8px;height:8px;border-radius:50%;flex:none}
+#st.st-processing .idot{background:#eab308;animation:pulse 1s infinite}
+#st.st-success .idot{background:var(--ok)}
+#st.st-fail .idot{background:var(--bad)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@media(max-width:520px){.stats{grid-template-columns:1fr}}
+</style></head><body>
+<div class="win">
+<div class="wbar"><span class="tl"></span><span class="tl"></span><span class="tl"></span>
+<div class="wtitle">Trial Injector</div></div>
+<div class="wbody">
+<div class="trow"><span class="t1">Inject trial</span><span class="t2">.</span></div>
+<p class="sub">Paste Qoder PAT → server-side WASM injection → trial activated</p>
+<form id="f" autocomplete="off">
+<div class="field"><label class="flab" for="pat">PAT</label>
+<div class="ff"><input id="pat" type="text" autocomplete="off" spellcheck="false" placeholder="pt-..." required></div></div>
+<button id="btn" type="submit" class="btn"><span class="spin"></span><span class="txt">Inject trial</span></button>
+</form>
+<div id="st"></div>
+<div id="log-box" class="log-box"><div class="log-header">📋 LIVE LOGS</div><div id="log-content"></div></div>
+<div id="err" class="err"></div>
+<div id="out" class="result">
+<div class="rhead"><span class="rlab">Result</span><div class="rspacer"></div>
+<span class="respill" id="respill"><span class="pdot" id="rdot"></span><span id="rtext">SUCCESS</span></span></div>
+<div class="verdict" id="hero"><div class="vbar"></div>
+<div><div class="vbig" id="verdict">-</div><div class="vsub" id="herolabel"></div></div>
+<div class="vspace"></div>
+<span class="dur" id="durms">-</span></div>
+<div class="stats" id="result-stats"></div>
 </div>
-
-<div id="step1">
-<input id="pat-input" type="text" placeholder="Paste Personal Access Token (from qoder.com → Account → Developer)" style="margin-bottom:10px">
-<button id="start-btn" onclick="startInject()">Inject Trial</button>
-</div>
-
-<div id="step3" class="hidden">
-<div id="status-box" class="status-box"></div>
-<div class="step-log" id="step-log"></div>
-</div>
-
-<div id="main-card"></div>
-<div id="raw-out"></div>
-
-<div class="session-list hidden" id="session-list-box">
-<strong style="color:#58a6ff;font-size:0.85em">Active Sessions (keep-alive)</strong>
-<div id="session-list"></div>
-</div>
-
+<div class="histblock"><div class="histhead">
+<span class="sechead">History</span>
+<span class="counter" id="injected-total">0 injected</span></div>
+<ul id="hist" class="hist"><li class="histempty">No attempts yet.</li></ul></div>
+</div></div>
 <script>
-// ===== Config =====
-const OPENAPI='https://openapi.qoder.sh';
-const CENTER='https://center.qoder.sh';
-const VERSION='0.2.11';
-const CLIENT_TYPE='6';
-const MACHINE_OS='arm64_darwin';
-const HEARTBEAT_MS=300000;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+const val=x=>x==null||x===''?'-':esc(x);
+const f=$('f'),btn=$('btn'),err=$('err'),out=$('out'),patIn=$('pat'),st=$('st'),logBox=$('log-box'),logContent=$('log-content');
+let logPolling=null,polling=null,histList=[];
 
-// ===== Session management =====
-let sessions={};
-let heartbeatTimer=null;
-function loadSessions(){try{sessions=JSON.parse(localStorage.getItem('qoder_sessions')||'{}');}catch{sessions={};}}
-function saveSessions(){localStorage.setItem('qoder_sessions',JSON.stringify(sessions));}
-function addSession(k,d){sessions[k]=d;saveSessions();renderSessions();startHeartbeat();}
-function removeSession(k){delete sessions[k];saveSessions();renderSessions();}
-function renderSessions(){
-const box=document.getElementById('session-list-box');
-const list=document.getElementById('session-list');
-const keys=Object.keys(sessions);
-if(keys.length===0){box.classList.add('hidden');return;}
-box.classList.remove('hidden');
-list.innerHTML='';
-for(const k of keys){const s=sessions[k];
-const dot=s.alive?'<span class="heartbeat-dot"></span>':'<span class="heartbeat-dot dead"></span>';
-const ago=s.lastHeartbeat?Math.round((Date.now()-s.lastHeartbeat)/1000)+'s ago':'never';
-list.innerHTML+='<div class="session-item"><span>'+dot+(s.name||k)+' — '+s.status+' — '+ago+'</span><button style="background:#da3633;padding:2px 8px;font-size:0.8em" onclick="removeSession(\''+k+'\')">✕</button></div>';
-}}
-function startHeartbeat(){
-if(heartbeatTimer)clearInterval(heartbeatTimer);
-heartbeatTimer=setInterval(async()=>{
-for(const k of Object.keys(sessions)){const s=sessions[k];if(!s.alive)continue;
-try{const h={'Accept':'application/json','Authorization':'Bearer '+s.token,'Cosy-Version':VERSION,'Cosy-ClientType':CLIENT_TYPE,'Cosy-MachineOS':MACHINE_OS,'Cosy-MachineId':s.machineId,'Cosy-MachineToken':s.machineToken,'Cosy-MachineType':s.machineType};
-const d=await proxy(`${OPENAPI}/api/v3/user/status`,'GET',h);
-sessions[k].lastHeartbeat=Date.now();sessions[k].alive=d.status===200;saveSessions();
-}catch{sessions[k].alive=false;saveSessions();}}
-renderSessions();
-},HEARTBEAT_MS);
-}
-function show(id){document.getElementById(id).classList.remove('hidden')}
-function hide(id){document.getElementById(id).classList.add('hidden')}
-function showStatus(m,c){const b=document.getElementById('status-box');b.className='status-box '+c;b.style.display='block';b.innerHTML=m;}
-function log(t,c){document.getElementById('step-log').innerHTML+='<div class="'+(c||'')+'">'+t+'</div>';}
-function clearLog(){document.getElementById('step-log').innerHTML='';}
+function setSt(cls,html){st.className='show '+cls;st.innerHTML='<span class="idot"></span>'+html}
 
-// Fake machineToken (88-char base64url = 66 bytes, same format as UMID)
-function genMachineToken(){const b=new Uint8Array(66);crypto.getRandomValues(b);let s='';for(let i=0;i<66;i++)s+=String.fromCharCode(b[i]);return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
-function genMachineType(){return Array.from(crypto.getRandomValues(new Uint8Array(8))).map(b=>b.toString(16).padStart(2,'0')).join('');}
-
-async function proxy(url,method,headers,body){
-const r=await fetch('/api/proxy',{method:'POST',headers:{'Content-Type':'application/json'},
-body:JSON.stringify({url,method,headers,body:body||null})});
-return r.json();
+function render(d){
+  const r=d.result||{};
+  const ok=d.injected||(r&&r.trial_granted);
+  $('hero').className='verdict '+(ok?'':'fail');
+  $('verdict').textContent=ok?'SUCCESS':'FAILED';
+  $('herolabel').textContent=ok?'trial injected':'not injected';
+  const rp=$('respill');rp.classList.toggle('bad',!ok);
+  $('rdot').style.background=ok?'var(--ok)':'var(--bad)';
+  $('rtext').textContent=ok?'SUCCESS':'FAILED';
+  $('durms').textContent=d.duration_ms!=null?d.duration_ms+' ms':'-';
+  const stats=[
+    ['Name',val(r.name)],['Email',val(r.email)],['Plan',val(r.plan)],
+    ['Trial granted',r.trial_granted?'yes':'no'],
+    ['Credits',(r.credits_remaining||0)+' / '+(r.credits_total||0)],
+  ];
+  $('result-stats').innerHTML=stats.map(([k,v])=>'<div class="row"><span class="k">'+k+'</span><span class="v">'+v+'</span></div>').join('');
+  out.classList.remove('hidden');out.classList.add('show');
 }
 
-// ===== WASM =====
-let wExp=null,wMem=null;
-const objs=[null];let nextSlot=1;
-function pushObj(v){if(v===undefined)return 0;const s=nextSlot;objs[s]=v;nextSlot++;return s;}
-function getObj(s){return objs[s];}
-function dropObj(s){objs[s]=null;}
-const enc=new TextEncoder();
-const dec=new TextDecoder('utf-8',{ignoreBOM:true,fatal:true});
-function dStr(p,l){return dec.decode(new Uint8Array(wMem.buffer,p>>>0,l>>>0));}
-
-const wImports={
-'./qoder_auth_wasm_bg.js':{
-__wbg_Error_2e59b1b37a9a34c3:(p,l)=>pushObj(Error(dStr(p,l))),
-__wbg___wbindgen_is_function_49868bde5eb1e745:s=>typeof getObj(s)==='function'?1:0,
-__wbg___wbindgen_is_object_40c5a80572e8f9d3:s=>{const v=getObj(s);return typeof v==='object'&&v!==null?1:0;},
-__wbg___wbindgen_is_string_b29b5c5a8065ba1a:s=>typeof getObj(s)==='string'?1:0,
-__wbg___wbindgen_is_undefined_c0cca72b82b86f4d:s=>getObj(s)===undefined?1:0,
-__wbg___wbindgen_throw_81fc77679af83bc6:(p,l)=>{throw new Error(dStr(p,l));},
-__wbg_call_d578befcc3145dee:(a,b,c)=>{try{return pushObj(getObj(a).call(getObj(b),getObj(c)));}catch(e){return pushObj(e);}},
-__wbg_crypto_38df2bab126b63dc:s=>pushObj(getObj(s).crypto),
-__wbg_getRandomValues_c44a50d8cfdaebeb:(a,b)=>{try{getObj(a).getRandomValues(getObj(b));}catch(e){return pushObj(e);}},
-__wbg_getRandomValues_d49329ff89a07af1:(p,l)=>{try{crypto.getRandomValues(new Uint8Array(wMem.buffer,p>>>0,l>>>0));}catch(e){return pushObj(e);}},
-__wbg_length_0c32cb8543c8e4c8:s=>getObj(s).length,
-__wbg_msCrypto_bd5a034af96bcba6:s=>0,
-__wbg_new_99cabae501c0a8a0:()=>pushObj(new Map()),
-__wbg_new_with_length_9cedd08484b73942:l=>pushObj(new Uint8Array(l>>>0)),
-__wbg_node_84ea875411254db1:s=>0,
-__wbg_now_88621c9c9a4f3ffc:()=>Date.now(),
-__wbg_process_44c7a14e11e9f69e:s=>0,
-__wbg_prototypesetcall_3e05eb9545565046:(p,l,v)=>Uint8Array.prototype.set.call(new Uint8Array(wMem.buffer,p>>>0,l>>>0),getObj(v)),
-__wbg_randomFillSync_6c25eac9869eb53c:(a,b)=>0,
-__wbg_require_b4edbdcf3e2a1ef0:()=>0,
-__wbg_set_08463b1df38a7e29:(m,k,v)=>pushObj(getObj(m).set(getObj(k),getObj(v))),
-__wbg_static_accessor_GLOBAL_THIS_a1248013d790bf5f:()=>pushObj(globalThis),
-__wbg_static_accessor_GLOBAL_f2e0f995a21329ff:()=>0,
-__wbg_static_accessor_SELF_24f78b6d23f286ea:()=>0,
-__wbg_static_accessor_WINDOW_59fd959c540fe405:()=>pushObj(window),
-__wbg_subarray_0f98d3fb634508ad:(s,a,b)=>pushObj(getObj(s).subarray(a>>>0,b>>>0)),
-__wbg_versions_276b2795b1c6a219:s=>0,
-__wbindgen_cast_0000000000000001:(p,l)=>pushObj(new Uint8Array(wMem.buffer,p>>>0,l>>>0)),
-__wbindgen_cast_0000000000000002:(p,l)=>pushObj(dStr(p,l)),
-__wbindgen_object_clone_ref:s=>pushObj(getObj(s)),
-__wbindgen_object_drop_ref:s=>dropObj(s),
+async function loadHistory(){
+  try{
+    const r=await fetch('/api/public/stats');const d=await r.json();
+    histList=d.history||[];
+    $('injected-total').textContent=(d.injected_total||0)+' injected';
+    const ul=$('hist');
+    if(!histList.length){ul.innerHTML='<li class="histempty">No attempts yet.</li>';return}
+    ul.innerHTML=histList.slice(0,10).map(h=>{
+      const c=h.ok?'var(--ok)':'var(--bad)';const lbl=h.ok?'SUCCESS':'FAILED';const cls=h.ok?'ok':'fail';
+      return '<li><span class="dot2" style="background:'+c+'"></span><span class="hp">'+esc(String(h.pat||'').slice(0,19))+'</span><span class="htime">'+relTime(h.ts)+'</span><span class="hist-label '+cls+'">'+lbl+'</span></li>';
+    }).join('');
+  }catch(_){}
 }
-};
+const relTime=ts=>{if(!ts)return'';let t=Number(ts);if(t<1e12)t*=1000;const s=Math.max(0,(Date.now()-t)/1000);if(s<60)return Math.floor(s)+'s ago';if(s<3600)return Math.floor(s/60)+'m ago';return Math.floor(s/3600)+'h ago'};
 
-async function loadWasm(){
-if(wExp)return true;
-showStatus('<span class="spinner"></span>Loading WASM...','status-loading');
-log('Fetching /qoder_auth.wasm...','');
-const r=await fetch('/qoder_auth.wasm');
-const buf=await r.arrayBuffer();
-log('WASM file: '+buf.byteLength+' bytes','step-ok');
-log('Instantiating WASM...','');
-const{instance}=await WebAssembly.instantiate(buf,wImports);
-wExp=instance.exports;
-wMem=wExp.memory;
-log('WASM loaded!','step-ok');
-const fns=Object.keys(wExp).filter(k=>typeof wExp[k]==='function');
-log('Exports ('+fns.length+'): '+fns.join(', '),'step-info');
-return true;
+function startLogPolling(jobId){
+  logBox.classList.add('show');logContent.innerHTML='';let last=0;
+  logPolling=setInterval(async()=>{
+    try{
+      const r=await fetch('/api/inject/logs?id='+jobId);const d=await r.json();
+      if(d.logs.length>last){
+        for(let i=last;i<d.logs.length;i++){
+          const line=document.createElement('div');line.className='log-line';const t=d.logs[i];
+          if(t.includes('SUCCESS')||t.includes('OK'))line.classList.add('success');
+          else if(t.includes('FAILED')||t.includes('ERROR'))line.classList.add('error');
+          else if(t.includes('[INJECT]')||t.includes('['))line.classList.add('inject');
+          line.textContent=t;logContent.appendChild(line);
+        }
+        last=d.logs.length;logBox.scrollTop=logBox.scrollHeight;
+      }
+    }catch(_){}
+  },1000);
 }
+function stopLogPolling(){if(logPolling){clearInterval(logPolling);logPolling=null}}
 
-function passStr(s){const buf=enc.encode(s);const ptr=wExp.__wbindgen_export2(buf.length,1)>>>0;new Uint8Array(wMem.buffer).set(buf,ptr);return[ptr,buf.length];}
-function createWasmCtx(mi,cv,ui,cm){
-const e=wExp;
-const[a,b]=passStr(mi),[c,d]=passStr(cv),[g,h]=passStr(ui);
-let i=0,j=0;if(cm){const[x,y]=passStr(cm);i=x;j=y;}
-const sp=e.__wbindgen_add_to_stack_pointer(-16);
-try{e.qodercontext_new(sp,a,b,c,d,g,h,i,j);
-const dv=new DataView(wMem.buffer);
-const ptr=dv.getInt32(sp,true),errPtr=dv.getInt32(sp+4,true);
-if(dv.getInt32(sp+8,true))throw new Error('ctx new error: '+errPtr);
-return ptr>>>0;
-}finally{e.__wbindgen_add_to_stack_pointer(16);}
-}
-function genAuthFields(uij){
-const e=wExp;
-const[p,l]=passStr(uij);
-const sp=e.__wbindgen_add_to_stack_pointer(-16);
-try{e.generate_runtime_auth_fields(sp,p,l);
-const dv=new DataView(wMem.buffer);
-const rP=dv.getInt32(sp,true),rL=dv.getInt32(sp+4,true),eP=dv.getInt32(sp+8,true),eF=dv.getInt32(sp+12,true);
-if(eF){throw new Error(dStr(eP,eF));}
-const json=dStr(rP,rL);e.__wbindgen_export4(rP,rL,1);return JSON.parse(json);
-}finally{e.__wbindgen_add_to_stack_pointer(16);}
-}
-function wasmPrepareRequest(ctx,ep,path,method,authMode,body){
-const e=wExp;
-const[a,b]=passStr(ep),[c,d]=passStr(path),[g,h]=passStr(method),[i,j]=passStr(authMode);
-let bP=0,bL=0;if(body){const[x,y]=passStr(body);bP=x;bL=y;}
-const sp=e.__wbindgen_add_to_stack_pointer(-16);
-try{e.qodercontext_prepareRequest(sp,ctx,a,b,c,d,g,h,i,j,bP,bL,0,0);
-const dv=new DataView(wMem.buffer);
-const rPtr=dv.getInt32(sp,true),errPtr=dv.getInt32(sp+4,true);
-if(dv.getInt32(sp+8,true))throw new Error('prepareRequest error: '+errPtr);
-return rPtr>>>0;
-}finally{e.__wbindgen_add_to_stack_pointer(16);}
-}
-function readResult(rPtr){
-let url='',body='';
-let sp=wExp.__wbindgen_add_to_stack_pointer(-16);
-try{wExp.requestresult_url(sp,rPtr);const dv=new DataView(wMem.buffer);
-const p=dv.getInt32(sp,true),l=dv.getInt32(sp+4,true);url=dStr(p,l);wExp.__wbindgen_export4(p,l,1);
-}finally{wExp.__wbindgen_add_to_stack_pointer(16);}
-const hIdx=wExp.requestresult_headers(rPtr);const hm=getObj(hIdx);dropObj(hIdx);
-const headers={};if(hm&&hm.forEach)hm.forEach((v,k)=>headers[k]=v);
-sp=wExp.__wbindgen_add_to_stack_pointer(-16);
-try{wExp.requestresult_body(sp,rPtr);const dv=new DataView(wMem.buffer);
-const p=dv.getInt32(sp,true),l=dv.getInt32(sp+4,true);
-if(p!==0){body=dStr(p,l);wExp.__wbindgen_export4(p,l,1);}
-}finally{wExp.__wbindgen_add_to_stack_pointer(16);}
-return{url,headers,body};
-}
-
-// ===== SELF TEST =====
-async function runSelfTest(){
-const btn=document.getElementById('test-btn');
-btn.disabled=true;btn.textContent='Testing...';
-show('step3');clearLog();
-let allOk=true;
-
-log('===== TEST 1: WASM Load =====','step-info');
-try{await loadWasm();log('WASM loaded','step-ok');}
-catch(e){log('WASM FAILED: '+e.message,'step-fail');btn.disabled=false;btn.textContent='🧪 Test WASM (no account)';showStatus('WASM test failed','status-fail');return;}
-
-log('===== TEST 2: QoderContext =====','step-info');
-let ctx=0;
-try{const mi=crypto.randomUUID();
-ctx=createWasmCtx(mi,VERSION,JSON.stringify({uid:'test',encrypt_user_info:'',key:''}),JSON.stringify({client_type:'6',business_product:'qoder_work',business_type:'agent',scene:'assistant'}));
-log('QoderContext created (ptr='+ctx+')','step-ok');
-}catch(e){log('Context FAILED: '+e.message,'step-fail');allOk=false;}
-
-log('===== TEST 3: generate_runtime_auth_fields =====','step-info');
-try{const f=genAuthFields(JSON.stringify({uid:'test',organization_id:'',organization_tags:[],data_policy_agreed:true}));
-log('encrypt_user_info: '+(f.encrypt_user_info||'empty').substring(0,40),'step-ok');
-log('key: '+(f.key||'empty').substring(0,40),'step-ok');
-}catch(e){log('genAuthFields FAILED: '+e.message,'step-fail');allOk=false;}
-
-log('===== TEST 4: prepareRequest =====','step-info');
-try{if(ctx>0){
-const rPtr=wasmPrepareRequest(ctx,CENTER,'/api/v2/config/updateDataPolicy?requestId=test&version=2','POST','auth','{}');
-const s=readResult(rPtr);
-log('Signed URL: '+s.url.substring(0,100),'step-ok');
-log('Signed headers: '+JSON.stringify(s.headers).substring(0,120),'step-ok');
-log('Signed body: '+(s.body||'').substring(0,60),'step-ok');
-if(wExp.__wbg_requestresult_free)wExp.__wbg_requestresult_free(rPtr,0);
-}}catch(e){log('prepareRequest FAILED: '+e.message,'step-fail');allOk=false;}
-
-log('===== TEST 5: Proxy reachability =====','step-info');
-try{const d=await proxy(`${CENTER}/api/v2/config/updateDataPolicy?requestId=ping&version=2`,'POST',{'Accept':'application/json','Content-Type':'application/json','Authorization':'Bearer test'},'{}');
-log('center.qoder.sh → '+d.status+': '+d.body.substring(0,60),d.status!==0?'step-ok':'step-fail');
-}catch(e){log('Proxy FAILED: '+e.message,'step-fail');allOk=false;}
-
-log('===== SUMMARY =====','step-info');
-if(allOk){log('ALL TESTS PASSED — ready to inject','step-ok');
-showStatus('✅ Self-test PASSED! Paste PAT and click Inject Trial.','status-ok');
-}else{log('Some tests failed','step-fail');showStatus('⚠️ Some tests failed. Check logs.','status-fail');}
-btn.disabled=false;btn.textContent='🧪 Test WASM (no account)';
-}
-
-// ===== INJECT (PAT flow, not device polling) =====
-async function startInject(){
-const pat=document.getElementById('pat-input').value.trim();
-if(!pat){alert('Paste PAT first (from qoder.com → Account → Developer)');return;}
-const btn=document.getElementById('start-btn');
-btn.disabled=true;btn.textContent='Injecting...';
-show('step3');clearLog();
-const mId=crypto.randomUUID();
-const mTok=genMachineToken();
-const mType=genMachineType();
-
-// Step 1: Load WASM
-log('===== STEP 1: Load WASM =====','step-info');
-try{await loadWasm();log('WASM ready','step-ok');}
-catch(e){log('WASM FAILED: '+e.message,'step-fail');btn.disabled=false;btn.textContent='Inject Trial';return;}
-
-// Step 2: Exchange PAT → token
-log('===== STEP 2: Exchange PAT =====','step-info');
-showStatus('<span class="spinner"></span>Exchanging PAT...','status-loading');
-const exD=await proxy(`${OPENAPI}/api/v1/jobToken/exchange`,'POST',
-{'Accept':'application/json','Content-Type':'application/json','Cosy-Version':VERSION,'Cosy-ClientType':CLIENT_TYPE,'Cosy-MachineOS':MACHINE_OS},
-JSON.stringify({personal_token:pat}));
-if(exD.status!==200){log('Exchange FAILED: '+exD.status+' '+exD.body,'step-fail');
-showStatus('❌ PAT exchange failed: '+exD.body,'status-fail');btn.disabled=false;btn.textContent='Inject Trial';return;}
-const exBody=JSON.parse(exD.body);
-const token=exBody.token||exBody.device_token||exBody.access_token;
-if(!token){log('No token in response','step-fail');showStatus('❌ No token in response','status-fail');btn.disabled=false;btn.textContent='Inject Trial';return;}
-log('Token received','step-ok');
-
-// Step 3: Get userinfo
-log('===== STEP 3: Get userinfo =====','step-info');
-showStatus('<span class="spinner"></span>Reading user info...','status-loading');
-const aH={'Accept':'application/json','User-Agent':'qoder/'+VERSION,'Authorization':'Bearer '+token,
-'Cosy-Version':VERSION,'Cosy-ClientType':CLIENT_TYPE,'Cosy-MachineOS':MACHINE_OS,
-'Cosy-MachineId':mId,'Cosy-MachineToken':mTok,'Cosy-MachineType':mType};
-const uiD=await proxy(`${OPENAPI}/api/v1/userinfo`,'GET',aH);
-const ui=uiD.status===200?JSON.parse(uiD.body):{};
-log('GET /api/v1/userinfo → '+uiD.status+': '+(ui.name||ui.email||'?'),'step-ok');
-
-// Step 4: WASM — generate auth fields FIRST, then create context with FULL user info
-log('===== STEP 4: WASM auth fields =====','step-info');
-let encryptInfo='',key='',wasmCtx=0;
-if(wExp){
-try{
-// 4a: Generate auth fields (input: {uid, organization_id, organization_tags, data_policy_agreed})
-const f=genAuthFields(JSON.stringify({uid:ui.uid||ui.id||'',organization_id:ui.organization_id||'',organization_tags:ui.organization_tags||[],data_policy_agreed:true}));
-encryptInfo=f.encrypt_user_info||'';key=f.key||'';
-log('encrypt_user_info: '+(encryptInfo.substring(0,30)||'empty'),'step-ok');
-log('key: '+(key.substring(0,30)||'empty'),'step-ok');
-
-// 4b: Build FULL user info (like CLI's cachedUserInfo)
-const fullUserInfo={uid:ui.uid||ui.id||'',name:ui.name||'',email:ui.email||'',
-security_oauth_token:token,access_token:token,
-expire_time:exBody.expire_time||exBody.expireTimeS||0,
-login_method:'token',login_timestamp:Math.floor(Date.now()/1000),
-encrypt_user_info:encryptInfo,key:key,
-organization_id:ui.organization_id||null,organization_tags:ui.organization_tags||[],
-data_policy_agreed:true};
-
-// 4c: Create QoderContext with FULL user info + client metadata
-wasmCtx=createWasmCtx(mId,VERSION,JSON.stringify(fullUserInfo),
-JSON.stringify({client_type:'6',business_product:'qoder_work',business_type:'agent',scene:'assistant'}));
-log('QoderContext created with full user info (ptr='+wasmCtx+')','step-ok');
-}catch(e){log('WASM auth FAILED: '+e.message,'step-fail');}
-}
-
-// Step 5: WASM-signed POST to center.qoder.sh
-log('===== STEP 5: WASM-signed updateDataPolicy =====','step-info');
-showStatus('<span class="spinner"></span>Signing + sending to center.qoder.sh...','status-loading');
-const reqId=crypto.randomUUID();
-const policyBody=JSON.stringify({payload:JSON.stringify({uid:ui.uid||ui.id||'',aid:'',status:'AGREE',UpdateTimestamp:Date.now(),LingmaVersion:VERSION,requestId:reqId}),encodeVersion:'1'});
-const policyPath='/api/v2/config/updateDataPolicy?requestId='+reqId+'&version=2';
-let policyD;
-if(wExp&&wasmCtx>0){
-try{
-const rPtr=wasmPrepareRequest(wasmCtx,CENTER,policyPath,'POST','auth',policyBody);
-const signed=readResult(rPtr);
-log('Signed URL: '+signed.url.substring(0,100),'step-ok');
-log('Signed headers: '+JSON.stringify(signed.headers).substring(0,120),'step-ok');
-// Merge WASM-signed headers with Cosy identity headers (like ko() does)
-const mergedHeaders={...signed.headers,
-'Cosy-Version':VERSION,'Cosy-ClientType':CLIENT_TYPE,'Cosy-MachineOS':MACHINE_OS};
-policyD=await proxy(signed.url,'POST',mergedHeaders,signed.body||policyBody);
-log('POST center → '+policyD.status+': '+policyD.body.substring(0,100),policyD.status===200?'step-ok':'step-fail');
-if(wExp.__wbg_requestresult_free)wExp.__wbg_requestresult_free(rPtr,0);
-}catch(e){log('WASM prepareRequest FAILED: '+e.message,'step-fail');policyD={status:0,body:e.message};}
-}else{
-policyD=await proxy(CENTER+policyPath,'POST',aH,policyBody);
-log('POST center (unsigned) → '+policyD.status+': '+policyD.body.substring(0,100),'step-skip');
-}
-
-// Step 6: GET /api/v3/user/status
-log('===== STEP 6: user/status =====','step-info');
-const stD=await proxy(OPENAPI+'/api/v3/user/status','GET',aH);
-log('GET /api/v3/user/status → '+stD.status+': '+stD.body.substring(0,100),stD.status===200?'step-ok':'step-skip');
-
-// Step 7: Verify
-log('===== STEP 7: Verify =====','step-info');
-showStatus('<span class="spinner"></span>Verifying trial...','status-loading');
-const plD=await proxy(OPENAPI+'/api/v2/user/plan','GET',aH);
-const pl=plD.status===200?JSON.parse(plD.body):{};
-log('GET /api/v2/user/plan → '+plD.status+': '+JSON.stringify(pl).substring(0,80),plD.status===200?'step-ok':'step-skip');
-const qD=await proxy(OPENAPI+'/api/v2/quota/usage','GET',aH);
-const q=qD.status===200?JSON.parse(qD.body):{};
-log('GET /api/v2/quota/usage → '+qD.status+': '+JSON.stringify(q).substring(0,80),qD.status===200?'step-ok':'step-skip');
-
-// Raw
-const raw=document.getElementById('raw-out');
-raw.style.display='block';
-raw.textContent='userinfo: '+JSON.stringify(ui,null,2).substring(0,300)+
-'\n\npolicy: '+policyD.body.substring(0,300)+
-'\n\nplan: '+JSON.stringify(pl,null,2).substring(0,300)+
-'\n\nquota: '+JSON.stringify(q,null,2).substring(0,300);
-
-// Result
-const card=document.getElementById('main-card');
-const hasCredits=q.userQuota?.total>0||q.total>0;
-const isPro=pl.plan==='pro'||pl.plan_type==='trial'||pl.user_type==='trial'||pl.user_type==='pro';
-if(isPro||hasCredits){
-card.className='result-ok';
-let h='<table>';
-h+='<tr><td>User</td><td>'+(ui.name||'?')+'</td></tr>';
-h+='<tr><td>Plan</td><td><strong>'+(pl.plan||pl.plan_type||'?')+'</strong></td></tr>';
-h+='<tr><td>Credits</td><td>'+(q.userQuota?.total||q.total||0)+'</td></tr>';
-h+='</table>';
-showStatus('✅ Inject SUCCESS — Trial Activated!'+h,'status-ok');
-addSession(ui.uid||ui.id||Date.now().toString(),{token,machineId:mId,machineToken:mTok,machineType:mType,name:ui.name||ui.email||sessionKey,status:'trial',lastHeartbeat:Date.now(),alive:true});
-}else{
-card.className='result-fail';
-let h='<table>';
-h+='<tr><td>User</td><td>'+(ui.name||'?')+'</td></tr>';
-h+='<tr><td>Plan</td><td>'+(pl.plan||pl.plan_type||'?')+'</td></tr>';
-h+='<tr><td>Type</td><td>'+(pl.user_type||pl.userType||'?')+'</td></tr>';
-h+='<tr><td>Credits</td><td>'+JSON.stringify(q).substring(0,100)+'</td></tr>';
-h+='<tr><td>Policy</td><td>'+policyD.status+': '+policyD.body.substring(0,80)+'</td></tr>';
-h+='</table>';
-showStatus('❌ Inject FAILED'+h,'status-fail');
-}
-btn.disabled=false;btn.textContent='Inject Trial';
-}
-
-// Init
-loadSessions();renderSessions();
-if(Object.keys(sessions).length>0)startHeartbeat();
-</script>
-</body>
-</html>
+f.addEventListener('submit',async(e)=>{
+  e.preventDefault();
+  const pat=patIn.value.trim();
+  if(!pat||!pat.startsWith('pt-')){err.textContent='PAT must start with pt-';err.classList.remove('hidden');return}
+  btn.disabled=true;btn.classList.add('loading');btn.querySelector('.txt').textContent='Injecting...';
+  err.classList.add('hidden');out.classList.remove('show');logContent.innerHTML='';
+  setSt('st-processing','🟡 Starting injection...');
+  try{
+    const r=await fetch('/api/inject',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pat})});
+    if(!r.ok){const d=await r.json().catch(()=>({}));throw new Error(d.error||('HTTP '+r.status))}
+    const d=await r.json();if(!d.job_id)throw new Error('No job ID');
+    startLogPolling(d.job_id);
+    setSt('st-processing','🟡 Processing... please wait');
+    let attempts=0;
+    polling=setInterval(async()=>{
+      attempts++;
+      if(attempts>=180){clearInterval(polling);stopLogPolling();setSt('st-fail','⏱️ Timeout');btn.disabled=false;btn.classList.remove('loading');btn.querySelector('.txt').textContent='Inject trial';loadHistory();return}
+      try{
+        const sr=await fetch('/api/inject/status?id='+d.job_id);const sd=await sr.json();
+        if(sd.done){
+          clearInterval(polling);stopLogPolling();render(sd);
+          if(sd.injected)setSt('st-success','✅ SUCCESS — Trial injected!');
+          else setSt('st-fail','❌ FAILED — Trial not granted');
+          btn.disabled=false;btn.classList.remove('loading');btn.querySelector('.txt').textContent='Inject trial';loadHistory();
+        }else{setSt('st-processing','🟡 Processing'+'.\u200b'.repeat((attempts%3)+1)+' ('+(attempts*2)+'s)')}
+      }catch(_){}
+    },2000);
+  }catch(ex){
+    err.textContent=ex.message||'Injection failed';err.classList.remove('hidden');
+    setSt('st-fail','❌ Error: '+esc(ex.message||''));
+    btn.disabled=false;btn.classList.remove('loading');btn.querySelector('.txt').textContent='Inject trial';
+  }
+});
+loadHistory();setInterval(loadHistory,5000);
+</script></body></html>
